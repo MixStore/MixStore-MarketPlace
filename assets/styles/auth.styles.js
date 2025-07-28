@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   illustration: {
+    // width: "100%",
     height: 310,
     width: 300,
     resizeMode: "contain",
