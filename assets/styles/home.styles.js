@@ -2,7 +2,7 @@
 import { StyleSheet } from "react-native";
 import { COLORS } from "../../app/util/COLORS";
 
-export const styles = StyleSheet.create({
+export const stl = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -10,6 +10,11 @@ export const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 0,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "600",
   },
   header: {
     flexDirection: "row",

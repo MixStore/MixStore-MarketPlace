@@ -9,10 +9,13 @@ export const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "center",
   },
+  textOi:{
+    paddingTop: 80
+  },
   illustration: {
     // width: "100%",
-    height: 310,
-    width: 300,
+    height: 100,
+    width: 320,
     resizeMode: "contain",
   },
   title: {

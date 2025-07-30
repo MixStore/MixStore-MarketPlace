@@ -58,7 +58,7 @@ export default function SignUpScreen() {
       // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId })
-        router.replace('/')
+        router.replace('/(root)/HomeScreen')
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
@@ -137,7 +137,7 @@ export default function SignUpScreen() {
             placeholder="Senha"
             secureTextEntry={true}
 
-            onChangeText={(password) => setEmailAddress(password)}
+            onChangeText={(password) => setPassword(password)}
           />
 
           <TouchableOpacity onPress={onSignUpPress} style={styles.button}>

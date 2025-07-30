@@ -33,14 +33,14 @@ export default function Page() {
     try {
       const signInAttempt = await signIn.create({
         identifier: emailAddress,
-        password,
+        password
       })
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId })
-        router.replace('/')
+        router.replace('/(root)/HomeScreen')
       } else {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
@@ -61,7 +61,7 @@ export default function Page() {
       
       <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
 
-        <Text>Olá!</Text>
+        <Text style={styles.textOi}>Olá!</Text>
       
         {error ? (
           <View style={styles.errorBox}>
@@ -89,7 +89,7 @@ export default function Page() {
             placeholder="Senha"
             secureTextEntry={true}
 
-            onChangeText={(password) => setEmailAddress(password)}
+            onChangeText={(password) => setPassword(password)}
           />
 
           <TouchableOpacity onPress={onSignInPress} style={styles.button}>
