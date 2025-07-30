@@ -5,6 +5,22 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../util/COLORS";
 
+// import * as admin from 'firebase-admin';
+// import { verifyToken } from '@clerk/backend';
+
+// const clerkToken = req.headers.authorization?.split('Bearer ')[1];
+// const clerkUser = await verifyToken(clerkToken);
+
+// const firebaseToken = await admin.auth().createCustomToken(clerkUser.sub);
+
+// import { getAuth, signInWithCustomToken } from 'firebase/auth';
+
+// const auth = getAuth(app);
+// await signInWithCustomToken(auth, firebaseToken);
+
+
+
+
 export default function Layout() {
   const { isSignedIn } = useUser();
 

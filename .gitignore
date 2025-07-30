@@ -38,3 +38,37 @@ yarn-error.*
 
 #clerk
 .env
+
+# Dependências
+node_modules/
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Arquivos de configuração do Firebase
+.firebase/
+.firebase.json
+.firebaserc
+firestore.rules
+firestore.indexes.json
+
+# Cache e builds
+dist/
+build/
+.cache/
+.expo/
+.expo-shared/
+
+# Configurações do editor
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
