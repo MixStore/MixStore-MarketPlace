@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native'
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { COLORS } from '../util/COLORS';
 import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
@@ -7,20 +7,20 @@ import { collection, getDocs} from "firebase/firestore";
 import { useState, useEffect  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
+import { useUser } from '@clerk/clerk-expo';
 import "../../global.css"
-
 import { Platform } from 'react-native';
-
 import * as FileSystem from 'expo-file-system';
 import { addDoc } from 'firebase/firestore';
-
-
-
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function AddPostScreen () {
+  const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
   const [image, setImage] = useState(null)
+  const {user}=useUser() 
+
 
   useEffect(() => {
     getCategoryList();
@@ -40,6 +40,30 @@ export default function AddPostScreen () {
     });
   }
 
+  const comprimirImagem = async (uri) => {
+    let qualidade = 1.0;
+    let imagemComprimida = null;
+  
+    while (qualidade > 0) {
+      const resultado = await ImageManipulator.manipulateAsync(
+        uri,
+        [],
+        { compress: qualidade, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+  
+      const tamanhoEmBytes = (resultado.base64.length * 3) / 4;
+  
+      if (tamanhoEmBytes <= 1024 * 1024) {
+        imagemComprimida = resultado.base64;
+        break;
+      }
+  
+      qualidade -= 0.1; // Reduz a qualidade gradualmente
+    }
+  
+    return imagemComprimida;
+  };
+
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -58,6 +82,10 @@ export default function AddPostScreen () {
   
 
   const onSubmitMethod = async (value) => {
+    setLoading(true)
+
+    
+
     try {
       let base64Image;
   
@@ -87,7 +115,6 @@ export default function AddPostScreen () {
   };
   
   const salvarNoFirestore = async (base64Image, value) => {
-    console.log("xgvbzxcblçm,zxcvbmclçbmxcgbkm   " + value.category)
     const postData = {
       title: value.title,
       desc: value.desc,
@@ -95,17 +122,29 @@ export default function AddPostScreen () {
       address: value.address,
       price: value.price,
       imageBase64: base64Image,
+      userName: user.fullName,
+      useremail: user.primaryEmailAddress.emailAddress,
+      userImage: user.imageUrl,
       createdAt: new Date(),
     };
   
-    await addDoc(collection(db, "Posts"), postData);
-    alert("Post enviado com sucesso!");
+    try{
+      await addDoc(collection(db, "Posts"), postData);
+      setLoading(false)  
+      alert("Post enviado com sucesso!");
+        
+      }
+      catch(error){
+        console.log("erro: "  + error)
+      }
+
     value.title = ''
     value.desc = ''
     value.category = ''
     value.address = ''
     value.price = ''
     setImage(null);
+
   };
   
   
@@ -116,7 +155,7 @@ export default function AddPostScreen () {
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
 
         <Formik
-        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:''}}
+        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'' }}
         onSubmit={value => onSubmitMethod(value)}
         validate={(values) =>{
           const errors={}
@@ -186,7 +225,15 @@ export default function AddPostScreen () {
 </Picker>
 
 
-              <TouchableOpacity onPress={handleSubmit}  style={styles.addButton} >
+              <TouchableOpacity onPress={handleSubmit} 
+style={[
+    styles.addButton,
+    { backgroundColor: loading ? COLORS.shadow : COLORS.primary }
+  ]}
+ disabled={loading} >
+                {loading ? <ActivityIndicator color={'#fff'} /> : <></> }
+
+
                 <Text style={styles.buttonText} > Enviar </Text>
               </TouchableOpacity>
             </View>
@@ -212,7 +259,6 @@ const styles = StyleSheet.create({
     fontSize: 17
   },
   addButton:{
-      backgroundColor: COLORS.primary,
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 24,
