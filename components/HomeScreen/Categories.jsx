@@ -1,8 +1,7 @@
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import "../../global.css"
-
-import { styled } from "nativewind";
 import { COLORS } from "../../app/util/COLORS";
+import { useNavigation } from "expo-router";
 
 
 export default function Categories({categoryList}){
@@ -16,6 +15,8 @@ const iconMap = {
   Tecnologia: require("../../assets/categories/icons/Tecnologia.png"),
 };
 
+const navigation=useNavigation()
+
     return(
         <View className="mt-3">
           <Text className="font-bold text-[20px]"> Categorias </Text>
@@ -23,8 +24,10 @@ const iconMap = {
             data={categoryList}
             numColumns={3}
             renderItem={({item, index}) => index<=8&&(
-                <TouchableOpacity style={styles.categories} className="flex flex-1 items-center justify-center border-[1px] border-gray-300 m-1 h-[80px] rounded-lg">
-                    
+                <TouchableOpacity style={styles.categories} className="flex flex-1 items-center justify-center border-[1px] border-gray-300 m-1 h-[80px] rounded-lg" onPress={()=>navigation.navigate('ItemList', {
+                  category:item.name
+                })}>
+                   
                   <Image source={iconMap[item.name]}
                     style={styles.icons}          />
 

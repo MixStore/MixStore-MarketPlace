@@ -1,12 +1,13 @@
-import { Text, View, StyleSheet } from 'react-native'
-import { COLORS } from '../util/COLORS';
-import Header from '../../components/HomeScreen/HeaderComponent';
-import "../../global.css"
-import { app } from '../../firebaseConfig';
-import Slider from '../../components/HomeScreen/Slider';
-import Categories from '../../components/HomeScreen/Categories';
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { StyleSheet, ScrollView } from 'react-native'
+import { COLORS } from '../../util/COLORS';
+import Header from '../../../components/HomeScreen/HeaderComponent';
+import { app } from '../../../firebaseConfig';
+import Slider from '../../../components/HomeScreen/Slider';
+import Categories from '../../../components/HomeScreen/Categories';
+import LatestItemList from '../../../components/HomeScreen/LatestItemList';
+import { collection, getDocs, getFirestore, orderBy } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import "../../../global.css"
 
 
 
@@ -14,11 +15,13 @@ export default function HomeScreen() {
  const [sliderList, setSliderList] = useState([])
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
+  const [latestItemList, setLatestItemList] = useState([]);
 
   
   useEffect(() => {
     getSliders();
     getCategoryList()
+    getLatestItemList()
   }, [])
 
   const getCategoryList=async ()=>{
@@ -43,18 +46,22 @@ export default function HomeScreen() {
     });
   }
 
-  useEffect(() => {
-    sliderList.forEach((item, index) => {
-      console.log(`Imagem ${index}:`, item.image?.substring(0, 100) + '...');
-    });
-  }, [sliderList]);
+  const getLatestItemList=async()=>{
+    const querySnapshot=await getDocs(collection(db, 'UserPost'), orderBy('createdAt', 'desc' ))
+    querySnapshot.forEach((doc)=>{
+      console.log("Docs", doc.data())
+      setLatestItemList(latestItemList => [...latestItemList, doc.data()])
+      
+    })
+  }
 
     return (
-      <View style={styles.container} className='py-8 px-6 flex-1' >
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.container} className='py-8 px-6 flex-1' >
         <Header/>
         <Slider sliderList={sliderList} />
         <Categories categoryList={categoryList} />
-      </View>
+        <LatestItemList latestItemList={latestItemList} heading={"Últimos itens"} />
+      </ScrollView>
     )
   
 }

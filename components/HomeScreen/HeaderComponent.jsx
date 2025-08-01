@@ -27,7 +27,7 @@ export default function HeaderComponent() {
 
 
 
-      <View className='p-3 px-5 bg-white mt-5 flex flex-row items-center gap-3 rounded-full border-[1px] border-amber-700 '>
+      <View className='p-[9px] px-5 bg-white mt-5 flex flex-row items-center gap-3 rounded-full border-[1px] border-amber-700 '>
         <Ionicons name="search" size={24} color="gray" />  
         <TextInput style={styles.textInput} placeholder='Pesquisa' className='ml-2 text-[18px]' onChangeText={(value) => console.log(value)}/> 
       </View>

@@ -2,6 +2,7 @@
 const coffeeTheme = {
     primary: "#8B593E",
     background: "#FFF8F3",
+    darkBackground: "#d5cdc7",
     text: "#4A3428",
     border: "#E5D3B7",
     white: "#FFFFFF",

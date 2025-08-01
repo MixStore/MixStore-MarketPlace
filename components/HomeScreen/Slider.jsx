@@ -1,19 +1,10 @@
-import { useUser } from "@clerk/clerk-expo";
 import { View, Image, Text, TextInput, StyleSheet, FlatList } from "react-native";
-import { COLORS } from "../../app/util/COLORS";
 import "../../global.css"
-import { Ionicons } from "@expo/vector-icons";
-import { collection } from "firebase/firestore";
-import { useEffect } from "react";
 
 
 export default function Slider({sliderList}) {
    const base64Prefix = "data:image/jpeg;base64,";
-   useEffect(() => {
-    sliderList.forEach((item, index) => {
-      console.log(`Imagem ${index}:`, item.Image?.substring(0, 100) + '...');
-    });
-  }, [sliderList]);
+
   
     return (
         <View className="mt-5">

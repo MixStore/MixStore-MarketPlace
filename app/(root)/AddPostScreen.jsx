@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
+import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView } from 'react-native'
 import { COLORS } from '../util/COLORS';
 import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
@@ -14,6 +14,7 @@ import * as FileSystem from 'expo-file-system';
 import { addDoc } from 'firebase/firestore';
 import * as ImageManipulator from 'expo-image-manipulator';
 
+
 export default function AddPostScreen () {
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
@@ -21,26 +22,13 @@ export default function AddPostScreen () {
   const [image, setImage] = useState(null)
   const {user}=useUser() 
 
+    
 
   useEffect(() => {
     getCategoryList();
   }, [])
   
-
-  const getCategoryList=async ()=>{
-    setCategoryList([])
-    const querySnapshot = await getDocs(collection(db, "Category"));
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-
-      console.log(doc.id, " => ", doc.data());
-      setCategoryList(categoryList => [...categoryList, doc.data()])
-      
-
-    });
-  }
-
-  const comprimirImagem = async (uri) => {
+  async function comprimirImagem (uri) {
     let qualidade = 1.0;
     let imagemComprimida = null;
   
@@ -63,6 +51,21 @@ export default function AddPostScreen () {
   
     return imagemComprimida;
   };
+
+  const getCategoryList=async ()=>{
+    setCategoryList([])
+    const querySnapshot = await getDocs(collection(db, "Category"));
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+
+      console.log(doc.id, " => ", doc.data());
+      setCategoryList(categoryList => [...categoryList, doc.data()])
+      
+
+    });
+  }
+
+  
 
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -90,24 +93,38 @@ export default function AddPostScreen () {
       let base64Image;
   
       if (Platform.OS === 'web') {
-        // Web: usa fetch + FileReader
         const response = await fetch(image);
         const blob = await response.blob();
-  
+      
         const reader = new FileReader();
         reader.readAsDataURL(blob);
-  
+      
         reader.onloadend = async () => {
-          base64Image = reader.result.split(',')[1]; // remove o prefixo "data:image/jpeg;base64,"
-          await salvarNoFirestore(base64Image, value);
+          const base64Original = reader.result.split(',')[1]; // remove o prefixo
+          const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+      
+          if (base64Comprimida) {
+            await salvarNoFirestore(base64Comprimida, value);
+          } else {
+            console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+          }
         };
-      } else {
+      }
+       else {
         // Mobile: usa FileSystem
-        base64Image = await FileSystem.readAsStringAsync(image, {
+        const base64Original = await FileSystem.readAsStringAsync(image, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        await salvarNoFirestore(base64Image, value);
+      
+        const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+      
+        if (base64Comprimida) {
+          await salvarNoFirestore(base64Comprimida, value);
+        } else {
+          console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+        }
       }
+      
     } catch (error) {
       console.error("Erro ao enviar post:", error);
       alert("Erro ao enviar post.");
@@ -125,7 +142,7 @@ export default function AddPostScreen () {
       userName: user.fullName,
       useremail: user.primaryEmailAddress.emailAddress,
       userImage: user.imageUrl,
-      createdAt: new Date(),
+      createdAt: new Date().now(),
     };
   
     try{
@@ -150,12 +167,13 @@ export default function AddPostScreen () {
   
 
     return (
-      <View className='p-10' style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView>
+      <ScrollView className='p-10' style={styles.container}>
         <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
-
         <Formik
-        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'' }}
+        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'', createAt:Date.now() }}
         onSubmit={value => onSubmitMethod(value)}
         validate={(values) =>{
           const errors={}
@@ -239,7 +257,9 @@ style={[
             </View>
           )}
         </Formik>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
+      </ScrollView>
     )
 }
 
