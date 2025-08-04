@@ -8,26 +8,11 @@ export default function HomeStackLayout(){
         <Stack>
             <Stack.Screen
         options={{
-            title: "Home",
+            title: "ExploreScreen",
             headerShown: false,
           }}  
-          name="HomeScreen" 
+          name="ExploreScreen" 
           />
-
-            
-        <Stack.Screen
-        name="ItemList"
-        options={({ route }) => ({
-          headerTitle: () => <Text style={styles.textHeader} className="text-[18px] font-bol">{route.params.category}</Text>,
-          headerStyle: {
-            backgroundColor: COLORS.primary,
-            
-          },
-          headerTintColor:COLORS.white
-        })}
-        
-      />
-
 
       <Stack.Screen
         name="ProductDetailScreen"
@@ -38,7 +23,6 @@ export default function HomeStackLayout(){
           headerTintColor:COLORS.white,
           headerTitle:"Detalhes"
         })}
-        
       />
     </Stack>
 

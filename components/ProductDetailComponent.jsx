@@ -1,17 +1,40 @@
 import { useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking } from "react-native";
-import { COLORS } from "../../util/COLORS";
+import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Button, Share } from "react-native";
+import { COLORS } from "../app/util/COLORS";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from '@react-navigation/native';
+import "../global.css"
 
-export default function ProductDetail(){
-
-    const {params}=useRoute()
+export default function ProductDetailComponent({params, navigation}){
     const[product, setProduct]=useState([])
 
     useEffect(()=>{
         console.log("teste parametros",params)
         params&&setProduct(params.product)
-    }, [])
+        
+        shareButton()
+        
+    }, [params, navigation])
+
+    const shareButton=()=>{
+        navigation.setOptions({
+            headerRight: () => (
+              <Ionicons  onPress={()=>shareProduct()} name="share-social-sharp" size={24} color="white" style={{ marginRight: 15 }} />
+            )
+          });          
+    }
+
+    const shareProduct = async()=>{
+        const content ={
+            message: product.title+"\n"+product?.desc,
+        }
+        Share.share(content).then(resp=>{
+            console.log(resp)
+        }, (error) => {
+            console.log(error)
+        } )
+    }
 
     const sendEmailMessage=()=>{
         const subject='Compra ' + product.title
