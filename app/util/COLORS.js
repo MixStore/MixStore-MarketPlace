@@ -1,3 +1,4 @@
+
 // constants/colors.js
 const coffeeTheme = {
     primary: "#8B593E",
@@ -10,6 +11,7 @@ const coffeeTheme = {
     expense: "#E74C3C",
     income: "#2ECC71",
     card: "#FFFFFF",
+    red: "#FF0000",
     shadow: "#000000",
   };
   
@@ -129,6 +131,7 @@ const cosmicTheme = {
   income: "#43A047",
   card: "#FFFFFF",
   shadow: "#000000",
+  red: "#FF0000",
 };
 
 

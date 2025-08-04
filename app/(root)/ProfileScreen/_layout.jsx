@@ -3,18 +3,30 @@ import { Stack } from "expo-router"
 import { COLORS } from "../../util/COLORS"
 import "../../../global.css"
 
-export default function ExploreStackLayout(){
+export default function ProfileStackLayout(){
     return(
         <Stack>
             <Stack.Screen
         options={{
-            title: "ExploreScreen",
+            title: "ProfileScreen",
             headerShown: false,
           }}  
-          name="ExploreScreen" 
+          name="ProfileScreen" 
           />
 
-      <Stack.Screen
+            
+        <Stack.Screen
+        name="MyProductsScreen"
+            options={({
+          headerStyle: {
+            backgroundColor: COLORS.primary,
+          },
+          headerTintColor:COLORS.white,
+          headerTitle:"Meus produtos"
+        })}
+        
+      />
+<Stack.Screen
         name="ProductDetailScreen"
         options={({
           headerStyle: {
@@ -24,6 +36,7 @@ export default function ExploreStackLayout(){
           headerTitle:"Detalhes"
         })}
       />
+
     </Stack>
 
 

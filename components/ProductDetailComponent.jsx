@@ -5,9 +5,11 @@ import { COLORS } from "../app/util/COLORS";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import "../global.css"
+import { useUser } from "@clerk/clerk-expo";
 
 export default function ProductDetailComponent({params, navigation}){
     const[product, setProduct]=useState([])
+    const {user} = useUser()
 
     useEffect(()=>{
         console.log("teste parametros",params)
@@ -69,11 +71,23 @@ export default function ProductDetailComponent({params, navigation}){
                     <Text className="text-gray-500">{product.useremail}</Text>
                 </View>
             </View>
-            <TouchableOpacity
+
+                {user?.primaryEmailAddress?.emailAddress===product.useremail 
+                ? 
+<TouchableOpacity
+            onPress={()=>sendEmailMessage()}
+            className="z-40 p-4 m-2 rounded-full" style={styles.buttonDelete} >
+                <Text className="text-center text-white font-bold" >Deletar produto</Text>
+            </TouchableOpacity>
+                : 
+                
+                <TouchableOpacity
             onPress={()=>sendEmailMessage()}
             className="z-40 p-4 m-2 rounded-full" style={styles.button} >
                 <Text className="text-center text-white font-bold" >Enviar Mensagem</Text>
             </TouchableOpacity>
+                }
+
         </ScrollView>
     )
 }
@@ -88,6 +102,14 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  buttonDelete: {
+    backgroundColor: COLORS.red,
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
