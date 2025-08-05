@@ -1,9 +1,8 @@
 {
   "expo": {
-
     "name": "Marketplace",
-    "slug": "Marketplace",
-    "scheme": "Marketplace", 
+    "slug": "mixstore",
+    "scheme": "Marketplace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -22,10 +21,14 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.jonathanrebello01.mixstore"
     },
     "web": {
-      "favicon":"./assets/images/logo.png"
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-secure-store",
@@ -35,6 +38,12 @@
           "photosPermission": "O app Precisa acessar Fotos em seu dispositivo"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6f215fda-ca97-4885-8acc-b5ec20441ca4"
+      }
+    },
+    "owner": "jonathanrebello01"
   }
 }

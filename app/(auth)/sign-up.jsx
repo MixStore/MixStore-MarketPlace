@@ -31,12 +31,12 @@ export default function SignUpScreen() {
         password,
       })
 
-      // Send user an email with verification code
+
+      setPendingVerification(true)
+
+
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
-      setPendingVerification(true)
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
