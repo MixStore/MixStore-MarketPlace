@@ -142,11 +142,11 @@ export default function AddPostScreen () {
       userName: user.fullName,
       useremail: user.primaryEmailAddress.emailAddress,
       userImage: user.imageUrl,
-      createdAt: new Date().now(),
+      createdAt: new Date(),
     };
   
     try{
-      await addDoc(collection(db, "Posts"), postData);
+      await addDoc(collection(db, "UserPost"), postData);
       setLoading(false)  
       alert("Post enviado com sucesso!");
         

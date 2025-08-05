@@ -3,8 +3,9 @@ import { COLORS } from '../../util/COLORS';
 import "../../../global.css"
 import { collection, getDocs, getFirestore, orderBy, query, where } from 'firebase/firestore';
 import { app } from '../../../firebaseConfig';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import LatestItemList from '../../../components/HomeScreen/LatestItemList';
+import { useFocusEffect } from 'expo-router';
 
 
 
@@ -14,22 +15,33 @@ export default function ExploreScreen () {
   const [loading, setLoading] = useState(false)
 
 
-  useEffect(()=>{
-    getAllProducts()
-  },[])
+  // useEffect(()=>{
+  //   setProductlist([])
+  //   getAllProducts()
+  // },[])
 
-  const getAllProducts=async ()=>{
-        setLoading(true)
-        
-        const q=query(collection(db, 'UserPost'), orderBy('createdAt', 'desc'))
-        const snapshot=await getDocs(q)
-        setLoading(false)
-       
-        snapshot.forEach((doc) => {
-          setProductlist(productList=>[...productList, doc.data()])
-          setLoading(false)
-        });
-    }
+  useFocusEffect(
+  useCallback(() => {
+    getAllProducts();
+  }, [])
+);
+
+const getAllProducts = async () => {
+  try {
+    setLoading(true);
+
+    const q = query(collection(db, 'UserPost'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    const products = snapshot.docs.map((doc) => doc.data());
+    setProductlist(products);
+  } catch (error) {
+    console.error("Erro ao buscar produtos:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     return (
       <ScrollView showsHorizontalScrollIndicator={false} className="p-5 py-8" style={styles.container}>

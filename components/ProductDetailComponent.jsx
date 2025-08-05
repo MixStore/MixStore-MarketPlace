@@ -1,15 +1,20 @@
-import { useRoute } from "@react-navigation/native";
+import { query, where, deleteDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Button, Share } from "react-native";
+import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Share, Alert } from "react-native";
+import { Platform } from "react-native";
 import { COLORS } from "../app/util/COLORS";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import "../global.css"
 import { useUser } from "@clerk/clerk-expo";
+import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { app } from "../firebaseConfig";
 
-export default function ProductDetailComponent({params, navigation}){
+export default function ProductDetailComponent({params}){
     const[product, setProduct]=useState([])
     const {user} = useUser()
+    const navigation = useNavigation();
+    const db = getFirestore(app);
 
     useEffect(()=>{
         console.log("teste parametros",params)
@@ -44,6 +49,44 @@ export default function ProductDetailComponent({params, navigation}){
         Linking.openURL('mailto:' + product.useremail +"?subject=" + subject+"&body=" + body )
     }
 
+    const deleteUserPost = async () => {
+       if (Platform.OS === 'web') {
+  const confirmDelete = window.confirm("Você tem certeza que deseja excluir este produto?");
+  if (confirmDelete) {
+    handleDelete();
+  }
+} else {
+  Alert.alert(
+    "Confirmar?",
+    "Você tem certeza que deseja excluir este produto?",
+    [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Deletar", onPress: () => handleDelete(), style: "destructive" }
+    ]
+  );
+}
+
+    };
+    const handleDelete = async () => {
+        try {
+            const db = getFirestore(app);
+            const userPostRef = collection(db, 'UserPost');
+            const q = query(userPostRef, where('useremail', '==', user?.primaryEmailAddress?.emailAddress), where('title', '==', product.title));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const docRef = snapshot.docs[0].ref;
+                await deleteDoc(docRef);
+                Alert.alert("Success", "Product deleted successfully.");
+                navigation.goBack()
+            } else {
+                Alert.alert("Error", "Product not found.");
+            }
+        } catch (error) {
+            console.error("Error deleting product: ", error);
+            Alert.alert("Error", "Failed to delete product."); 
+        }
+    }; 
+
     return(
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
             <Image
@@ -74,8 +117,8 @@ export default function ProductDetailComponent({params, navigation}){
 
                 {user?.primaryEmailAddress?.emailAddress===product.useremail 
                 ? 
-<TouchableOpacity
-            onPress={()=>sendEmailMessage()}
+            <TouchableOpacity
+            onPress={()=>deleteUserPost()}
             className="z-40 p-4 m-2 rounded-full" style={styles.buttonDelete} >
                 <Text className="text-center text-white font-bold" >Deletar produto</Text>
             </TouchableOpacity>

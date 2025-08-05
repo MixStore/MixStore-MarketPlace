@@ -1,7 +1,6 @@
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from "react-native";
 import "../../global.css";
 import { useEffect } from "react";
-import { COLORS } from "../../app/util/COLORS";
 import PostItem from "./PostItem";
 
 export default function LatestItemList({ latestItemList, heading }) {

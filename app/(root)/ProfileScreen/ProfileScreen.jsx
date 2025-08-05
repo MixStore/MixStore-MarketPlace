@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView } from 'react-native'
+import { Text, View, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView, Linking } from 'react-native'
 import { COLORS } from '../../util/COLORS';
 import { SignedIn, SignedOut, useClerk, useUser } from '@clerk/clerk-expo'
 import { Redirect, useNavigation } from 'expo-router'
@@ -32,7 +32,7 @@ export default function ProfileScreen () {
       id:3,
       name:'Meu Github',
       icon: github,
-      path: "https://github.com/JonathanRebello01"
+      url: "https://github.com/JonathanRebello01"
     },
     {
       id:4,
@@ -90,11 +90,6 @@ export default function ProfileScreen () {
             </TouchableOpacity>
           )}
           />
-          
-
-          <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        
-        <SignOutButton />
       </SignedIn>
 
       <SignedOut>
