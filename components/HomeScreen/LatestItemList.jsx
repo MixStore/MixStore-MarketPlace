@@ -10,6 +10,7 @@ export default function LatestItemList({ latestItemList, heading }) {
     });
   }, [latestItemList]);
 
+
   return (
     <View className="mt-3">
       <Text className="font-bold text-[20px]"> {[heading]} </Text>

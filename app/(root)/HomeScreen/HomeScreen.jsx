@@ -8,12 +8,14 @@ import LatestItemList from '../../../components/HomeScreen/LatestItemList';
 import { collection, getDocs, getFirestore, orderBy } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import "../../../global.css"
+import { useNavigation } from 'expo-router';
 
 
 
 export default function HomeScreen() {
  const [sliderList, setSliderList] = useState([])
   const db = getFirestore(app);
+  const navigation = useNavigation();
   const [categoryList, setCategoryList] = useState([]);
   const [latestItemList, setLatestItemList] = useState([]);
 
@@ -23,6 +25,15 @@ export default function HomeScreen() {
     getCategoryList()
     getLatestItemList()
   }, [])
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      getLatestItemList();
+    });
+  
+    return unsubscribe; // Limpa o listener ao desmontar
+  }, [navigation]);
+  
 
   const getCategoryList=async ()=>{
     setCategoryList([])
@@ -47,6 +58,7 @@ export default function HomeScreen() {
   }
 
   const getLatestItemList=async()=>{
+  setLatestItemList([])
     const querySnapshot=await getDocs(collection(db, 'UserPost'), orderBy('createdAt', 'desc' ))
     querySnapshot.forEach((doc)=>{
       console.log("Docs", doc.data())

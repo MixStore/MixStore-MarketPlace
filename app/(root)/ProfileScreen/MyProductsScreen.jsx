@@ -17,10 +17,18 @@ export default function MyProductsScreen () {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false)
 
-// useEffect(() => {
-//     setProductList([])
-//     getUserPosts()
-//   }, [])
+
+
+
+useEffect(()=>{
+  user&&getUserPosts()
+},[user])
+
+useEffect(()=>{
+  navigation.addListener('focus'), (e) =>{
+    getUserPosts()
+  }
+},[navigation])
 
       useFocusEffect(
       useCallback(() => {
@@ -30,6 +38,7 @@ export default function MyProductsScreen () {
     );
   
 const getUserPosts = async () => {
+  setProductList([])
   try {
     setLoading(true)
     const q = query(
