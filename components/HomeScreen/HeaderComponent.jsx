@@ -1,12 +1,12 @@
-import { useUser } from "@clerk/clerk-expo";
 import { View, Image, Text, TextInput, StyleSheet } from "react-native";
 import { COLORS } from "../../app/util/COLORS";
 import "../../global.css"
 import { Ionicons } from "@expo/vector-icons";
+import { getAuth } from "firebase/auth";
 
 
 export default function HeaderComponent() {
-  const { user } = useUser();
+  const user  = getAuth().currentUser
     
 
 
@@ -15,12 +15,12 @@ export default function HeaderComponent() {
 
     <View className='flex flex-row items-center gap-2'>
       <Image
-        source={{ uri: user?.imageUrl }}
+        source={{ uri: user?.photoURL }}
         style={{ width: 56, height: 56, borderRadius: 100, borderColor: COLORS.primary, borderWidth:1  }}
         />
       <View>
         <Text className='text-[14px]'>Bem-Vindo</Text>
-        <Text className='text-[18px] font-bold'>{user?.primaryEmailAddress.emailAddress}</Text>
+        <Text className='text-[18px] font-bold'>{user?.email}</Text>
       </View>
     </View>
 

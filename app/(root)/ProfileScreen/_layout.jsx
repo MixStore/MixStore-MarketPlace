@@ -3,6 +3,7 @@ import { Stack } from "expo-router"
 import { COLORS } from "../../util/COLORS"
 import "../../../global.css"
 
+
 export default function ProfileStackLayout(){
     return(
         <Stack>

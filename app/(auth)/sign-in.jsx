@@ -1,66 +1,73 @@
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
-import { useSignIn } from '@clerk/clerk-expo'
-import { Link, useRouter } from 'expo-router'
-import { Text, TextInput, TouchableOpacity, View, Image } from 'react-native'
-import { useState } from 'react'
-import React from 'react'
-import { styles } from "../../assets/styles/auth.styles"
-import { Ionicons } from "@expo/vector-icons"
-import { COLORS } from "../util/COLORS"
-import { LinkingContext } from "@react-navigation/native"
 
-// import { useSignUp } from '@clerk/clerk-expo'
-// import { useRouter } from 'expo-router'
-// import { styles } from '../../assets/styles/auth.styles.js'
-// import { Ionicons } from "@expo/vector-icons"
-// import { COLORS } from '../util/COLORS.js'
+import React, { useState } from 'react'
+import { Text, TextInput, TouchableOpacity, View, Image, StyleSheet } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
+import { styles } from '../../assets/styles/auth.styles'
+import { COLORS } from '../util/COLORS'
+import { Link } from 'expo-router'
+import FlashMessage, { showMessage } from 'react-native-flash-message'
+
+import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+
 
 
 export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn()
   const router = useRouter()
 
-  const [emailAddress, setEmailAddress] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const auth = getAuth()
 
+  function showToast(message, type = 'success') {
+    showMessage({
+      message,
+      type, // 'success', 'danger', 'info'
+      duration: 3000,
+      position: 'bottom',
+    })
+  }
+  
 
-  // Handle the submission of the sign-in form
+  
+
   const onSignInPress = async () => {
-    if (!isLoaded) return
-
-    // Start the sign-in process using the email and password provided
     try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password
-      })
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === 'complete') {
-        await setActive({ session: signInAttempt.createdSessionId })
-        router.replace('/(root)/HomeScreen')
-      } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2))
+      if (!user.emailVerified) {
+        showToast('Por favor, verifique seu e-mail antes de continuar.', 'danger')
+        await signOut(auth)
+        router.replace({ pathname: '/sign-up', params: { setPendingVerification: 'true', email: email, password: password } })
+        return
       }
+
+      router.replace('/(root)/HomeScreen')
+
     } catch (err) {
-      if (err.errors?.[0]?.code === "form_password_incorrect") {
-        setError("Password is incorrect. Please try again.");
+      showToast('Um erro inesperado ocorreu'+ err, 'danger')
+
+      if (err.code === 'auth/wrong-password') {
+        setError('Senha incorreta. Tente novamente.')
+      } else if (err.code === 'auth/user-not-found') {
+        setError('Usuário não encontrado.')
       } else {
-        setError("An error occurred. Please try again.");
+        setError('Ocorreu um erro. Tente novamente.')
       }
     }
   }
 
+
+
   return (
     <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container}>
-      
-      <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
-
+      <View style={stls.container} >
+        <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
+      </View>
         <Text style={styles.textOi}>Olá!</Text>
       
         {error ? (
@@ -76,10 +83,10 @@ export default function Page() {
 <TextInput
             style={[styles.input, error && styles.errorInput]}
             autoCapitalize="none"
-            value={emailAddress}
+            value={email}
             placeholderTextColor="#6c9cba"
             placeholder="E-mail"
-            onChangeText={(email) => setEmailAddress(email)}
+            onChangeText={(email) => setEmail(email)}
           />
 
           <TextInput
@@ -107,6 +114,17 @@ export default function Page() {
         </View>
 
       </View>
+          <FlashMessage position="bottom" />
+      
     </KeyboardAwareScrollView>
   )
 }
+
+const stls = StyleSheet.create({
+  container:{
+    paddingTop: 32,
+    flex:1,
+    justifyContent:"center",
+    alignItems:"center"
+  }
+})

@@ -1,27 +1,37 @@
-import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo'
-import { Link, Redirect } from 'expo-router'
-import { Text, View } from 'react-native'
-import { SignOutButton } from '../components/SignOutButton/SignOutButton';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { Redirect } from 'expo-router';
+
+import { View, Text } from 'react-native';
 
 export default function Page() {
-  const { user } = useUser()
+  
+  
 
-  return ( 
-    <View>
-      <Redirect href={"/(auth)/sign-in"} />
-      <SignedIn>
-        <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <SignOutButton />
-      </SignedIn>
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-      <SignedOut>
-        <Link href="/(auth)/sign-in">
-          <Text>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-          <Text>Sign up</Text>
-        </Link>
-      </SignedOut>
-    </View>
-  )
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <View>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (user) {
+    return <Redirect href="/(root)/HomeScreen" />;
+  }
+
+  return <Redirect href="/(auth)/sign-in" />;
 }

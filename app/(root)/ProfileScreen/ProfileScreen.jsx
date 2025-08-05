@@ -1,20 +1,19 @@
 import { Text, View, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView, Linking } from 'react-native'
 import { COLORS } from '../../util/COLORS';
-import { SignedIn, SignedOut, useClerk, useUser } from '@clerk/clerk-expo'
-import { Redirect, useNavigation } from 'expo-router'
-import { SignOutButton } from '../../../components/SignOutButton/SignOutButton';
+import { useNavigation, useRouter } from 'expo-router'
 import "../../../global.css"
 import explore from "../../../assets/IconsProfileScreen/explore.png"
 import github from "../../../assets/IconsProfileScreen/github.png"
 import logout from "../../../assets/IconsProfileScreen/logout.png"
 import meusProdutos from "../../../assets/IconsProfileScreen/meusProdutos.png"
+import { getAuth, signOut } from 'firebase/auth';
 
 
 
 export default function ProfileScreen () {
-  const { user } = useUser()
+  const  user  = getAuth().currentUser
   const navigation = useNavigation();
-   const { signOut } = useClerk()
+  const router = useRouter()
   const menuList = [
     {
       id:1,
@@ -41,15 +40,24 @@ export default function ProfileScreen () {
     }
   ]
 
-      const handleSignOut = async () => {
+  const handleSignOut = async () => {
     try {
-      await signOut()
-      // Redirect to your desired page
-      router.replace('/')
+
+
+      
+      const auth = getAuth()
+      
+      console.log(auth)
+
+      await signOut(auth).then(() => {
+        console.log("User signed out successfully.");
+        router.replace('/(auth)/sign-in') // redireciona para a tela inicial ou login
+      })
+      .catch((error) => {
+        console.error("Error signing out:", error);
+      });
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error("Erro ao sair:", err)
     }
   }
 
@@ -68,13 +76,12 @@ export default function ProfileScreen () {
   
   return (
       <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >     
-        <SignedIn>
           <View className='items-center mt-14'> 
-            <Image source={{uri:user?.imageUrl}} 
+            <Image source={{uri:user?.photoURL}} 
             className='w-[100px] h-[100px] rounded-full'
             />
             <Text className='font-bold text-[25px] mt-5' > {user?.username} </Text>
-            <Text className='text-[14px] mt-2 text-gray-400'  > {user?.primaryEmailAddress.emailAddress} </Text>
+            <Text className='text-[14px] mt-2 text-gray-400'  > {user?.email} </Text>
           </View>
 
           <FlatList
@@ -90,11 +97,6 @@ export default function ProfileScreen () {
             </TouchableOpacity>
           )}
           />
-      </SignedIn>
-
-      <SignedOut>
-        <Redirect href={"/(auth)/sign-in"} />
-      </SignedOut>
       </ScrollView>
     )
 }

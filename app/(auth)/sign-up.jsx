@@ -5,49 +5,33 @@ import { styles } from '../../assets/styles/auth.styles.js'
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from '../util/COLORS.js'
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import Toast from 'react-native-toast-message';
-import { Platform } from 'react-native'
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import FlashMessage, { showMessage } from 'react-native-flash-message'
+import { useLocalSearchParams } from 'expo-router'
+
 
 
 export default function SignUpScreen() {
   const router = useRouter()
-  const auth = getAuth();
+  
+  const { setPendingVerification: pendingParam } = useLocalSearchParams()
+  const { email: emailParam } = useLocalSearchParams()
+  const { password: passwordParam } = useLocalSearchParams()
+
+
+  const auth = getAuth()
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
-  const [pendingVerification, setPendingVerification] = useState(false)
+  const [pendingVerification, setPendingVerification] = useState(pendingParam === 'true')
   const [error, setError] = useState('')
   
-const [canResend, setCanResend] = useState(true);
-const [cooldown, setCooldown] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+  const [cooldown, setCooldown] = useState(0);
 
 
   // Handle submission of sign-up form
   
-  // import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
-  // const auth = getAuth(app);
-  
-  // const onLoginPress = async () => {
-  //   try {
-  //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  //     const user = userCredential.user;
-  
-  //     if (!user.emailVerified) {
-  //       alert("Por favor, verifique seu e-mail antes de continuar.");
-  //       // Opcional: deslogar o usuário
-  //       await auth.signOut();
-  //       return;
-  //     }
-  
-  //     // Usuário verificado, pode continuar
-  //     console.log("Login bem-sucedido!");
-  //   } catch (error) {
-  //     console.error("Erro ao fazer login:", error);
-  //   }
-  // };
-  
 
   function showToast(message, type = 'success') {
     showMessage({
@@ -95,7 +79,7 @@ const [cooldown, setCooldown] = useState(0);
   
       console.log("Usuário criado e e-mail de verificação enviado.");
     } catch (err) {
-      showToast("um erro inisperado ocorreu", "danger")
+      showToast("um erro inesperado ocorreu", "danger")
 
       console.error("Erro ao criar usuário:", err);
       return
@@ -111,6 +95,38 @@ const [cooldown, setCooldown] = useState(0);
 const onNoPress = async () => {
   if (!canResend) return;
 
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+      const userCredential = await signInWithEmailAndPassword(auth, emailParam, passwordParam)
+      const user = userCredential.user
+      try {
+        await sendEmailVerification(user);
+        setCanResend(false);
+        setCooldown(60); // 60 segundos de espera
+        showToast("E-mail reenviado", "success")
+          
+        await signOut(auth).then(() => {})
+               .catch((error) => {
+                 console.error("Error signing out:", error);
+               });
+
+    
+      } catch (error) {
+        showToast("um erro inesperado ocorreu", "danger")
+
+        await signOut(auth).then(() => {})
+               .catch((error) => {
+                 console.error("Error signing out:", error);
+               });
+    
+        console.error("Erro ao reenviar e-mail de verificação:", error);
+      }
+
+      return;
+  }
+
   try {
     await sendEmailVerification(auth.currentUser);
     setCanResend(false);
@@ -118,7 +134,7 @@ const onNoPress = async () => {
     showToast("E-mail reenviado", "success")
 
   } catch (error) {
-    showToast("um erro inisperado ocorreu", "danger")
+    showToast("um erro inesperado ocorreu", "danger")
 
     console.error("Erro ao reenviar e-mail de verificação:", error);
   }
@@ -141,39 +157,34 @@ useEffect(() => {
   return () => clearInterval(timer);
 }, [cooldown]);
 
+if (pendingVerification) {
+  return (
+  <View style={[styles.container, stls.container]}>
+    <Text style={stls.title}>Recebeu o e-mail?</Text>
 
+    <View style={stls.buttonContainer}>
+      <TouchableOpacity style={stls.button} onPress={onYesPress}>
+        <Text style={stls.buttonText}>Sim, fazer login</Text>
+      </TouchableOpacity>
 
-  if (pendingVerification) {
-return (
-  
-  <View className='flex flex-1 justify-center items-center' >
-<View style={styles.container}>
-      <Text  className='flex flex-1 justify-center items-center'  style={stls.title}>Recebeu o e-mail?</Text>
-
-      <View className='flex flex-1 justify-center items-center'  style={stls.buttonContainer}>
-        <TouchableOpacity style={stls.button} onPress={onYesPress}>
-          <Text style={stls.buttonText}>Sim, fazer login</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[stls.button, stls.noButton, !canResend && { opacity: 0.5 }]}
-          onPress={onNoPress}
-          disabled={!canResend}
-        >
-          <Text style={stls.buttonText}>
-            {!canResend ? `Aguarde ${cooldown}s` : 'Não, reenviar e-mail'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-    
-<FlashMessage position="bottom" />
-
+      <TouchableOpacity
+        style={[stls.button, stls.noButton, !canResend && { opacity: 0.5 }]}
+        onPress={onNoPress}
+        disabled={!canResend}
+      >
+        <Text style={stls.buttonText}>
+          {!canResend ? `Aguarde ${cooldown}s` : 'Não, reenviar e-mail'}
+        </Text>
+      </TouchableOpacity>
     </View>
 
-);
+  <FlashMessage position="bottom" />
+</View>
 
-  }
+  );
+}
+
+
 
   return (
     <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
@@ -232,9 +243,7 @@ return (
 
 const stls = StyleSheet.create({
   container:{
-    flex:1,
-    alignItems:"center",
-    justifyContent: "center",
+    alignItems:"center"
   },
   title: {
     fontSize: 20,

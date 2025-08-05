@@ -6,13 +6,13 @@ import { COLORS } from "../app/util/COLORS";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 import "../global.css"
-import { useUser } from "@clerk/clerk-expo";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { app } from "../firebaseConfig";
+import { getAuth } from "firebase/auth";
 
 export default function ProductDetailComponent({params}){
     const[product, setProduct]=useState([])
-    const {user} = useUser()
+    const user = getAuth().currentUser
     const navigation = useNavigation();
     const db = getFirestore(app);
 
@@ -71,7 +71,7 @@ export default function ProductDetailComponent({params}){
         try {
             const db = getFirestore(app);
             const userPostRef = collection(db, 'UserPost');
-            const q = query(userPostRef, where('useremail', '==', user?.primaryEmailAddress?.emailAddress), where('title', '==', product.title));
+            const q = query(userPostRef, where('useremail', '==', user?.email), where('title', '==', product.title));
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 const docRef = snapshot.docs[0].ref;
@@ -115,7 +115,7 @@ export default function ProductDetailComponent({params}){
                 </View>
             </View>
 
-                {user?.primaryEmailAddress?.emailAddress===product.useremail 
+                {user?.email===product.useremail 
                 ? 
             <TouchableOpacity
             onPress={()=>deleteUserPost()}

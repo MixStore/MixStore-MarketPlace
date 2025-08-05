@@ -1,18 +1,44 @@
-import { useUser } from "@clerk/clerk-expo";
-import { Redirect } from "expo-router";
-import { Text, StyleSheet } from "react-native";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
+import { Text, StyleSheet, View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../util/COLORS";
 import Toast from 'react-native-toast-message';
+import FlashMessage from 'react-native-flash-message';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { app } from "../../firebaseConfig";
 
-import FlashMessage, { showMessage } from 'react-native-flash-message';
 
 
 export default function Layout() {
-  const { isSignedIn } = useUser();
+  const [user, setUser] = useState(null);  
+  const [loading, setLoading] = useState(true);
 
-  if (!isSignedIn) return <Redirect href="/sign-in" />;
+
+  useEffect(() => {
+    const auth = getAuth(app);
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false)
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  
+if (loading) {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+      <Text style={{ marginTop: 10 }}>Verificando autenticação...</Text>
+    </View>
+  );
+}
+  
+  if (!user) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
   return (
     

@@ -7,12 +7,12 @@ import { collection, getDocs} from "firebase/firestore";
 import { useState, useEffect  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { useUser } from '@clerk/clerk-expo';
 import "../../global.css"
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { addDoc } from 'firebase/firestore';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { getAuth } from 'firebase/auth';
 
 
 export default function AddPostScreen () {
@@ -20,7 +20,9 @@ export default function AddPostScreen () {
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
   const [image, setImage] = useState(null)
-  const {user}=useUser() 
+  const user=getAuth().currentUser
+  console.log("meu nome e jlia")
+  console.log(user)
 
     
 
@@ -139,9 +141,9 @@ export default function AddPostScreen () {
       address: value.address,
       price: value.price,
       imageBase64: base64Image,
-      userName: user.fullName,
-      useremail: user.primaryEmailAddress.emailAddress,
-      userImage: user.imageUrl,
+      userName: user.displayName,
+      useremail: user.email,
+      userImage: user.photoURL,
       createdAt: new Date(),
     };
   
@@ -179,7 +181,7 @@ export default function AddPostScreen () {
           const errors={}
           if(!values.title){
             console.log("Campo título vazio")
-            errors.name="Titulo necessário"
+            errors.titulo="Titulo necessário"
           }
           return errors
         }}

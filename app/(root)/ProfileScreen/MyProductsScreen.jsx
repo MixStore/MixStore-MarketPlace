@@ -1,17 +1,16 @@
-import { Text, View, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
 import { COLORS } from '../../util/COLORS';
-import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo'
-import { Redirect, useFocusEffect, useNavigation } from 'expo-router'
-import { SignOutButton } from '../../../components/SignOutButton/SignOutButton';
+import { useFocusEffect, useNavigation } from 'expo-router'
 import "../../../global.css"
 import { collection, getDocs, getFirestore, Query, query, where } from 'firebase/firestore';
 import { app } from '../../../firebaseConfig';
-import { use, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import LatestItemList from '../../../components/HomeScreen/LatestItemList';
+import { getAuth } from 'firebase/auth';
 
 
 export default function MyProductsScreen () {
-  const { user } = useUser()
+  const user  = getAuth().currentUser
   const bd = getFirestore(app)
   const [productList, setProductList] = useState([])
   const navigation = useNavigation();
@@ -24,11 +23,6 @@ useEffect(()=>{
   user&&getUserPosts()
 },[user])
 
-useEffect(()=>{
-  navigation.addListener('focus'), (e) =>{
-    getUserPosts()
-  }
-},[navigation])
 
       useFocusEffect(
       useCallback(() => {
@@ -43,7 +37,7 @@ const getUserPosts = async () => {
     setLoading(true)
     const q = query(
       collection(bd, 'UserPost'),
-      where('useremail', '==', user?.primaryEmailAddress?.emailAddress)
+      where('useremail', '==', user?.email)
     )
     const snapshot = await getDocs(q)
 
