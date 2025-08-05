@@ -4,6 +4,9 @@ import { Text, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../util/COLORS";
+import Toast from 'react-native-toast-message';
+
+import FlashMessage, { showMessage } from 'react-native-flash-message';
 
 
 export default function Layout() {
@@ -110,7 +113,11 @@ export default function Layout() {
           ),
         }}
       />
+      <FlashMessage position="bottom" />
+
+      <Toast />
     </Tabs>
+    
   );
 }
 

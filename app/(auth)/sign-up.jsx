@@ -1,110 +1,182 @@
-import { useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View, Image } from 'react-native'
-import { useSignUp } from '@clerk/clerk-expo'
+import { useEffect, useState } from 'react'
+import { Text, TextInput, TouchableOpacity, View, Image, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { styles } from '../../assets/styles/auth.styles.js'
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from '../util/COLORS.js'
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import Toast from 'react-native-toast-message';
+import { Platform } from 'react-native'
+import FlashMessage, { showMessage } from 'react-native-flash-message'
 
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
-
+  const auth = getAuth();
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
-  const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  
+const [canResend, setCanResend] = useState(true);
+const [cooldown, setCooldown] = useState(0);
+
 
   // Handle submission of sign-up form
+  
+  // import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
+  // const auth = getAuth(app);
+  
+  // const onLoginPress = async () => {
+  //   try {
+  //     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  //     const user = userCredential.user;
+  
+  //     if (!user.emailVerified) {
+  //       alert("Por favor, verifique seu e-mail antes de continuar.");
+  //       // Opcional: deslogar o usuário
+  //       await auth.signOut();
+  //       return;
+  //     }
+  
+  //     // Usuário verificado, pode continuar
+  //     console.log("Login bem-sucedido!");
+  //   } catch (error) {
+  //     console.error("Erro ao fazer login:", error);
+  //   }
+  // };
+  
+
+  function showToast(message, type = 'success') {
+    showMessage({
+      message,
+      type, // 'success', 'danger', 'info'
+      duration: 3000,
+      position: 'bottom',
+    });
+  }
+  
+  
+
+  // function showToast(message, type = 'success') {
+  //   Toast.show({
+  //     type: type, // 'success', 'error', 'info'
+  //     text1: message,
+  //     position: 'bottom',
+  //     visibilityTime: 3000,
+  //     autoHide: true,
+  //   });
+  // }
+  
+
   const onSignUpPress = async () => {
-    if (!isLoaded) return
+    setCooldown(60)
+    setCanResend(false)
 
-    console.log(emailAddress, password)
+    setPendingVerification(true);
 
-    // Start sign-up process using email and password provided
+    console.log(emailAddress, password);
+  
     try {
-      await signUp.create({
-        emailAddress,
-        password,
-      })
+      // Cria o usuário com e-mail e senha
+      const userCredential = await createUserWithEmailAndPassword(auth, emailAddress, password);
+      const user = userCredential.user;
+  
 
+      // Atualiza estado para indicar que o e-mail de verificação foi enviado
+      // Envia e-mail de verificação
+      
+      await sendEmailVerification(user);
+      console.log("Email de verificação enviado para:", user.email);
+      showToast("E-mail De verificação enviado", "success")
 
-      setPendingVerification(true)
-
-
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-
+  
+      console.log("Usuário criado e e-mail de verificação enviado.");
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      showToast("um erro inisperado ocorreu", "danger")
+
+      console.error("Erro ao criar usuário:", err);
+      return
     }
+  };
+
+
+  const onYesPress=()=>{
+    router.navigate("./sign-in")
   }
 
-  // Handle submission of verification form
-  const onVerifyPress = async () => {
-    if (!isLoaded) return
+  
+const onNoPress = async () => {
+  if (!canResend) return;
 
-    try {
-      // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
-      })
+  try {
+    await sendEmailVerification(auth.currentUser);
+    setCanResend(false);
+    setCooldown(60); // 60 segundos de espera
+    showToast("E-mail reenviado", "success")
 
-      // If verification was completed, set the session to active
-      // and redirect the user
-      if (signUpAttempt.status === 'complete') {
-        await setActive({ session: signUpAttempt.createdSessionId })
-        router.replace('/(root)/HomeScreen')
-      } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2))
-      }
-    } catch (err) {
-      if (err.errors?.[0]?.code === "form_identifier_exists") {
-        setError("That email address is already in use. Please try another.");
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-      console.log(err);
-    }
+  } catch (error) {
+    showToast("um erro inisperado ocorreu", "danger")
+
+    console.error("Erro ao reenviar e-mail de verificação:", error);
   }
+};
+
+useEffect(() => {
+  let timer;
+  if (cooldown > 0) {
+    timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+  return () => clearInterval(timer);
+}, [cooldown]);
+
+
 
   if (pendingVerification) {
-    return (
-      <View  style={styles.verificationContainer} >
-        <Text style={styles.verificationTitle}>Verify your email</Text>
+return (
+  
+  <View className='flex flex-1 justify-center items-center' >
+<View style={styles.container}>
+      <Text  className='flex flex-1 justify-center items-center'  style={stls.title}>Recebeu o e-mail?</Text>
 
-        {error ? (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={20} color={COLORS.expense} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError("")}>
-              <Ionicons name="close" size={20} color={COLORS.textLight} />
-            </TouchableOpacity>
-          </View>
-        ) : null}
+      <View className='flex flex-1 justify-center items-center'  style={stls.buttonContainer}>
+        <TouchableOpacity style={stls.button} onPress={onYesPress}>
+          <Text style={stls.buttonText}>Sim, fazer login</Text>
+        </TouchableOpacity>
 
-
-        <TextInput
-          style={[styles.verificationInput, error && styles.errorInput]}
-          value={code}
-          placeholder="Digite o código de verificação"
-          onChangeText={(code) => setCode(code)}
-        />
-        <TouchableOpacity onPress={onVerifyPress} style={styles.button}>
-          <Text style={styles.buttonText}>Verify</Text>
+        <TouchableOpacity
+          style={[stls.button, stls.noButton, !canResend && { opacity: 0.5 }]}
+          onPress={onNoPress}
+          disabled={!canResend}
+        >
+          <Text style={stls.buttonText}>
+            {!canResend ? `Aguarde ${cooldown}s` : 'Não, reenviar e-mail'}
+          </Text>
         </TouchableOpacity>
       </View>
-    )
+    </View>
+    
+<FlashMessage position="bottom" />
+
+    </View>
+
+);
+
   }
 
   return (
-    <KeyboardAwareScrollView style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
+    <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container} >
 
           <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
@@ -146,11 +218,46 @@ export default function SignUpScreen() {
 
            <View style={styles.footerContainer}>
           <Text style={styles.footerText}>Já possui uma conta?</Text>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.navigate("./sign-in")}>
             <Text style={styles.linkText}>Entre aqui</Text>
           </TouchableOpacity>
         </View>
       </View>
+      
+    <FlashMessage position="bottom" />
+
     </KeyboardAwareScrollView>
   )
 }
+
+const stls = StyleSheet.create({
+  container:{
+    flex:1,
+    alignItems:"center",
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.textDark,
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  noButton: {
+    backgroundColor: COLORS.expense,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

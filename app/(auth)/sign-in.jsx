@@ -56,7 +56,7 @@ export default function Page() {
   }
 
   return (
-    <KeyboardAwareScrollView style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
+    <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container}>
       
       <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
