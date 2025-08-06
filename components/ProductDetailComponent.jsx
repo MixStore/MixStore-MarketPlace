@@ -44,9 +44,10 @@ export default function ProductDetailComponent({params}){
     }
 
     const sendEmailMessage=()=>{
-        const subject='Compra ' + product.title
-        const body="HI " + product.userName+"\n" + "Estou interessado neste produto"
-        Linking.openURL('mailto:' + product.useremail +"?subject=" + subject+"&body=" + body )
+        // const subject='Compra ' + product.title
+        // const body="HI " + product.userName+"\n" + "Estou interessado neste produto"
+        // Linking.openURL('mailto:' + product.useremail +"?subject=" + subject+"&body=" + body )
+        Linking.openURL('https://api.whatsapp.com/send?phone=5592984744917&text=Oi%2C%20Estou%20interessado%20em%20um%20produto%20de%20MixStore!')
     }
 
     const deleteUserPost = async () => {
