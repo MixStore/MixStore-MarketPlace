@@ -21,6 +21,8 @@ export default function AddPostScreen () {
   const [categoryList, setCategoryList] = useState([]);
   const [image, setImage] = useState(null)
   const user=getAuth().currentUser
+
+  
   console.log("meu nome e jlia")
   console.log(user)
 
@@ -169,9 +171,9 @@ export default function AddPostScreen () {
   
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} className='p-10' style={styles.container}>
       <KeyboardAvoidingView>
-      <ScrollView className='p-10' style={styles.container}>
+      <ScrollView >
         <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
         <Formik

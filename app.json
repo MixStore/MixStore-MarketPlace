@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Marketplace",
+    "name": "MixStore",
     "slug": "mixstore",
-    "scheme": "Marketplace",
+    "scheme": "MixStore",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -13,6 +13,21 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "favicon": "./assets/images/logo.png",
+      "manifest": {
+      "short_name": "MixStore",
+      "name": "MixStore",
+      "start_url": ".",
+      "display": "standalone",
+      "bundler": "metro",
+      "orientation": "portrait",
+      "background_color": "#ffffff",
+      "theme_color": "#000000"
+      }
+    },
+
     "ios": {
       "supportsTablet": true
     },
@@ -26,9 +41,6 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.jonathanrebello01.mixstore"
-    },
-    "web": {
-      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-secure-store",

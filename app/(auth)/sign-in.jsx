@@ -9,7 +9,7 @@ import { COLORS } from '../util/COLORS'
 import { Link } from 'expo-router'
 import FlashMessage, { showMessage } from 'react-native-flash-message'
 
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 
 
 
@@ -60,6 +60,18 @@ export default function Page() {
     }
   }
 
+  const onInviteSignIn=()=>{
+    signInAnonymously(auth)
+      .then(() => {
+        router.replace('/(root)/HomeScreen')
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
+    
+  }
+
 
 
   return (
@@ -98,10 +110,15 @@ export default function Page() {
 
             onChangeText={(password) => setPassword(password)}
           />
+          <View style={stls.containerButtom} >
+            <TouchableOpacity onPress={onSignInPress} style={styles.button}>
+              <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={onSignInPress} style={styles.button}>
-            <Text style={styles.buttonText}>Entrar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={onInviteSignIn} style={stls.button}>
+              <Text style={styles.buttonText}>Entrar como convidado</Text>
+            </TouchableOpacity>
+          </View>
 
         <View style={styles.footerContainer}>
           <Text style={styles.footerText}>Não tem uma conta?</Text>
@@ -126,5 +143,19 @@ const stls = StyleSheet.create({
     flex:1,
     justifyContent:"center",
     alignItems:"center"
+  },
+  containerButtom:{
+    justifyContent:"center",
+    flexDirection: "row",
+    gap: 5
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 20,
   }
+
 })

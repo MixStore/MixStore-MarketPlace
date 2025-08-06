@@ -14,6 +14,7 @@ export default function Layout() {
   const [user, setUser] = useState(null);  
   const [loading, setLoading] = useState(true);
 
+  console.log("ola" + user?.email)
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -87,15 +88,18 @@ if (loading) {
           tabBarIcon: ({ size, focused }) => (
             <Ionicons
               size={size}
-              name="search"
+              name="compass-sharp"
               color={focused ? COLORS.expense : COLORS.primary}
             />
           ),
         }}
       />
+
+      
       <Tabs.Screen
         name="AddPostScreen"
         options={{
+          href: user?.email == "rebello.jonathan@gmail.com" || "frotaana2005@gmail.com" || "ofc.mixstore@gmail.com" ? undefined : null,
           title: "addpost",
           tabBarLabel: ({ focused }) => (
             <Text
