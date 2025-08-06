@@ -78,7 +78,7 @@ export default function Page() {
     <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container}>
       <View style={stls.container} >
-        <Image source={require("../../assets/images/logo.png")} style={stls.illustration} />
+        <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
       </View>
         <Text style={styles.textOi}>Olá!</Text>
       
@@ -92,16 +92,44 @@ export default function Page() {
           </View>
         ) : null}
 
-            <TouchableOpacity onPress={onInviteSignIn} style={stls.button}>
-              <Text style={styles.buttonText}>Entrar como convidado</Text>
-            </TouchableOpacity>
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Precisa fazer login?</Text>
+<TextInput
+            style={[styles.input, error && styles.errorInput]}
+            autoCapitalize="none"
+            value={email}
+            placeholderTextColor="#6c9cba"
+            placeholder="E-mail"
+            onChangeText={(email) => setEmail(email)}
+          />
 
-          <Link href="/sign-in-adm" asChild>
-          <TouchableOpacity>
-            <Text style={styles.linkText}>Entrar</Text>
-          </TouchableOpacity>
+          <TextInput
+            style={[styles.input, error && styles.errorInput]}
+            value={password}
+            placeholderTextColor="#6c9cba"
+            placeholder="Senha"
+            secureTextEntry={true}
+
+            onChangeText={(password) => setPassword(password)}
+          />
+
+            <TouchableOpacity onPress={onSignInPress} style={styles.button}>
+              <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+
+           
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>Não tem uma conta?</Text>
+            <Link href="/sign-up" asChild>
+            <TouchableOpacity>
+              <Text style={styles.linkText}>Cadastre-se aqui</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+        <View style={styles.footerContainer}>
+        <Text style={styles.footerText}>Entre como convidado: </Text>
+            <Link href="/sign-in" asChild>
+            <TouchableOpacity>
+              <Text style={styles.linkText}>Entrar como convidado</Text>
+            </TouchableOpacity>
           </Link>
         </View>
 
@@ -123,11 +151,6 @@ const stls = StyleSheet.create({
     justifyContent:"center",
     flexDirection: "row",
     gap: 5
-  },
-  illustration: {
-    height: 200,
-    width: 640,
-    resizeMode: "contain",
   },
   button: {
     backgroundColor: COLORS.primary,
