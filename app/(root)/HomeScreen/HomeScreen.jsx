@@ -5,7 +5,7 @@ import { app } from '../../../firebaseConfig';
 import Slider from '../../../components/HomeScreen/Slider';
 import Categories from '../../../components/HomeScreen/Categories';
 import LatestItemList from '../../../components/HomeScreen/LatestItemList';
-import { collection, getDocs, getFirestore, orderBy } from "firebase/firestore";
+import { collection, getDocs, getFirestore, orderBy, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import "../../../global.css"
 import { useNavigation } from 'expo-router';

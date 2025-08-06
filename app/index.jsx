@@ -24,7 +24,7 @@ export default function Page() {
   if (loading) {
     return (
       <View>
-        <Text>Carregando...</Text>
+        <Text></Text>
       </View>
     );
   }

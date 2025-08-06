@@ -5,7 +5,7 @@ import { COLORS } from "../util/COLORS";
 import Toast from 'react-native-toast-message';
 import FlashMessage from 'react-native-flash-message';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { app } from "../../firebaseConfig";
 
 
@@ -13,6 +13,7 @@ import { app } from "../../firebaseConfig";
 export default function Layout() {
   const [user, setUser] = useState(null);  
   const [loading, setLoading] = useState(true);
+  const [showAddPost, setShowAddPost] = useState(false)
 
   console.log("ola" + user?.email)
 
@@ -22,11 +23,17 @@ export default function Layout() {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false)
+    
     });
 
     return () => unsubscribe();
   }, []);
 
+  useLayoutEffect(()=>{
+    if(user?.email ===  "rebello.jonathan@gmail.com" || user?.email === "frotaana2005@gmail.com" || user?.email === "ofc.mixstore@gmail.com"){
+      setShowAddPost(true)
+    }
+  }, [])
   
 if (loading) {
   return (
@@ -99,7 +106,7 @@ if (loading) {
       <Tabs.Screen
         name="AddPostScreen"
         options={{
-          href: user?.email == "rebello.jonathan@gmail.com" || "frotaana2005@gmail.com" || "ofc.mixstore@gmail.com" ? undefined : null,
+          href: showAddPost? undefined : null,
           title: "addpost",
           tabBarLabel: ({ focused }) => (
             <Text
