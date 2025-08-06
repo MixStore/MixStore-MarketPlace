@@ -55,7 +55,7 @@ const getUserPosts = async () => {
   return (
       <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >     
           
-          {loading ? <ActivityIndicator /> : <LatestItemList latestItemList={productList} heading={"Meus Produtos"}   />}
+          {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <LatestItemList latestItemList={productList} heading={"Meus Produtos"}   />}
 
           
 

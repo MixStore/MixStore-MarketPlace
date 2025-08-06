@@ -38,7 +38,7 @@ export default function Layout() {
 if (loading) {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
+     <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} />
       <Text style={{ marginTop: 10 }}>Verificando autenticação...</Text>
     </View>
   );

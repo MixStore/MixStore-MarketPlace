@@ -7,6 +7,7 @@ import github from "../../../assets/IconsProfileScreen/github.png"
 import logout from "../../../assets/IconsProfileScreen/logout.png"
 import meusProdutos from "../../../assets/IconsProfileScreen/meusProdutos.png"
 import { getAuth, signOut } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 
 
 
@@ -76,18 +77,14 @@ export default function ProfileScreen () {
   
   return (
       <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >     
-          <View className='items-center mt-14'> 
-            <Image source={{uri:user?.photoURL}} 
-            className='w-[100px] h-[100px] rounded-full'
-            />
-            <Text className='font-bold text-[25px] mt-5' > {user?.username} </Text>
-            <Text className='text-[14px] mt-2 text-gray-400'  > {user?.email} </Text>
+          <View className='items-center mt-6'> 
+           <Ionicons size={300} name="person-circle-outline"/>
           </View>
 
           <FlatList
           data={menuList}
           numColumns={3}
-          style={{marginTop: 20}}
+          style={{marginTop: 10}}
           renderItem={({item, index}) => (
             <TouchableOpacity onPress={() => onMenupress(item)} className='flex-1 p-3 border-[1px] items-center mx-2 mt-4 rounded-lg border-orange-600 bg-white' >
               {item.icon&& <Image source={item.icon} 

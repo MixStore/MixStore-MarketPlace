@@ -15,12 +15,12 @@ export default function HeaderComponent() {
 
     <View className='flex flex-row items-center gap-2'>
       <Image
-        source={{ uri: user?.photoURL }}
-        style={{ width: 56, height: 56, borderRadius: 100, borderColor: COLORS.primary, borderWidth:1  }}
-        />
+        source={ require("../../assets/images/logo.png") }
+        style={{ width: 100, height: 100, borderRadius: 10, borderColor: COLORS.primary, borderWidth:1  }}
+        /> 
       <View>
-        <Text className='text-[14px]'>Bem-Vindo</Text>
-        <Text className='text-[18px] font-bold'>{user?.email}</Text>
+        <Text style={styles.title} >Seja muito bem-vindo à Mix Store! 😁</Text>
+        {/* <Text className='text-[18px] font-bold'>{user?.email}</Text> */}
       </View>
     </View>
 
@@ -39,5 +39,17 @@ export default function HeaderComponent() {
 const styles = StyleSheet.create({
   textInput: {
     flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: COLORS.text,
+    marginVertical: 15,
+    textAlign: "center",
   },
 })

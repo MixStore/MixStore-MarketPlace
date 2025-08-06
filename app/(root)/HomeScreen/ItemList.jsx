@@ -35,7 +35,7 @@ export default function ItemList () {
     }
   return (
       <View className='p-2' style={styles.container}>
-      {loading ? <ActivityIndicator className='mt-24' size={'large'} color="black"/> : itemList.length>0 ? <LatestItemList latestItemList={itemList} heading={"Últimos Posts"} /> : <Text className='p-5 mt-24 text[20px] text-gray-400 justify-center text-center' > Sem Postagens nesta categoria </Text>} 
+      {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : itemList.length>0 ? <LatestItemList latestItemList={itemList} heading={"Últimos Posts"} /> : <Text className='p-5 mt-24 text[20px] text-gray-400 justify-center text-center' > Sem Postagens nesta categoria </Text>} 
       </View>
     )
 }

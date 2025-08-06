@@ -46,7 +46,7 @@ const getAllProducts = async () => {
     return (
       <ScrollView showsHorizontalScrollIndicator={false} className="p-5 py-8" style={styles.container}>
         <Text className='text-[24px] font-bold'> Explorar mais  </Text>
-        {loading ? <ActivityIndicator className='mt-24' size={'large'} color="black"/> : <LatestItemList latestItemList={productList} />}
+        {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <LatestItemList latestItemList={productList} />}
       </ScrollView>
     )
 }

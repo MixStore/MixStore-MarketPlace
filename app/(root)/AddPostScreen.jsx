@@ -253,7 +253,7 @@ style={[
     { backgroundColor: loading ? COLORS.shadow : COLORS.primary }
   ]}
  disabled={loading} >
-                {loading ? <ActivityIndicator color={'#fff'} /> : <></> }
+                {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <></> }
 
 
                 <Text style={styles.buttonText} > Enviar </Text>
