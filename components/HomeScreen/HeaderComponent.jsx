@@ -14,15 +14,20 @@ export default function HeaderComponent() {
   const user = getAuth().currentUser;
   const { width } = useWindowDimensions();
 
-  const dynamicFontSize = width < 360 ? 18 : width < 480 ? 24 : 30;
-  const logoSize = width < 360 ? 60 : width < 480 ? 80 : 100;
+  // Responsividade baseada na largura da tela
+  const dynamicFontSize = width < 510 ? 18 : width < 480 ? 24 : 30;
+  const logoSize = width < 510 ? 60 : width < 480 ? 80 : 100;
+  const inputFontSize = width < 510 ? 14 : width < 480 ? 16 : 18;
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Image
           source={require("../../assets/images/logo.png")}
-          style={[styles.logo, { width: logoSize, height: logoSize }]}
+          style={[
+            styles.logo,
+            { width: logoSize, height: logoSize, borderRadius: logoSize / 10 },
+          ]}
         />
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { fontSize: dynamicFontSize }]}>
@@ -35,7 +40,7 @@ export default function HeaderComponent() {
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={24} color="gray" />
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { fontSize: inputFontSize }]}
           placeholder="Pesquisa"
           onChangeText={(value) => console.log(value)}
           placeholderTextColor="#999"
@@ -57,7 +62,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   logo: {
-    borderRadius: 10,
     borderColor: COLORS.primary,
     borderWidth: 1,
   },
@@ -86,7 +90,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
     marginLeft: 8,
     color: COLORS.text,
   },
