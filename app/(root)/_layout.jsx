@@ -23,18 +23,18 @@ export default function Layout() {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false)
-    
     });
 
     return () => unsubscribe();
   }, []);
-
   useLayoutEffect(()=>{
+    console.log("teste de email: " + user?.email )
     if(user?.email ===  "rebello.jonathan@gmail.com" || user?.email === "frotaana2005@gmail.com" || user?.email === "ofc.mixstore@gmail.com"){
       setShowAddPost(true)
     }
-  }, [])
+  }, [user])
   
+
 if (loading) {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

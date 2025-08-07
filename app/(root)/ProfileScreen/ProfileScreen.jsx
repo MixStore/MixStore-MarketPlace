@@ -76,11 +76,15 @@ export default function ProfileScreen () {
   }
   
   return (
-      <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >     
-          <View className='items-center mt-6'> 
+       <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >  
+           <View className='items-center'> 
            <Ionicons size={300} name="person-circle-outline"/>
+            <Text className='font-bold text-[25px]' > {user?.username} </Text>
+            <Text className='text-[14px] text-gray-400'  > {user?.email} </Text>
           </View>
 
+
+          
           <FlatList
           data={menuList}
           numColumns={3}
