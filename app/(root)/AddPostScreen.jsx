@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView } from 'react-native'
+import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Button } from 'react-native'
 import { COLORS } from '../util/COLORS';
 import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
@@ -8,29 +8,253 @@ import { useState, useEffect  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import "../../global.css"
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
 import { addDoc } from 'firebase/firestore';
+import {useGoogleLogin} from '@react-oauth/google'
 import * as ImageManipulator from 'expo-image-manipulator';
 import { getAuth } from 'firebase/auth';
+import axios from "axios"
+
+
+
 
 
 export default function AddPostScreen () {
+  const [imageUrl, setImageUrl] = useState(null)
+  const [token, setToken] = useState(null)
+  const [nomeImagem, setNomeImagem] = useState(null)
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
   const [image, setImage] = useState(null)
+  const [value, setValue] = useState(null)
   const user=getAuth().currentUser
+    useEffect(() => {
+      googleLogin()
+      getCategoryList();
+    }, [])
+
 
   
-  console.log("meu nome e jlia")
-  console.log(user)
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoResponse = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+
+        setToken(tokenResponse.access_token);
+
+        userInfo = userInfoResponse.data
+        console.log('User Info:', userInfo);
+
+        await uploadImageToDrive(tokenResponse.access_token)
+
+
+      } catch (error) {
+        console.error('Erro ao buscar informações do usuário:', error);
+      }
+    },
+    onError: (errorResponse) => console.log('Erro no login:', errorResponse),
+  });
+
+  const uploadImageToDrive = async (accessToken) => {
+  
+    const imagem = await fetch(image);
+    const binario = await imagem.blob();
+  
+    const metadata = {
+      name: nomeImagem ,
+    };
+  
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', binario);
+  
+      console.log("teste axes token: " + accessToken)
+    const uploadResponse = await axios.post(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      form, 
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const result = uploadResponse.data;
+
+
+    await axios.post(
+      `https://www.googleapis.com/drive/v3/files/${result.id}/permissions`,
+      {
+        role: 'reader',
+        type: 'anyone',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+     
+      const publicUrl = `https://drive.google.com/uc?id=${result.id}`;
+      setImageUrl(publicUrl);
+      console.log('Upload feito:', result);
+      await salvarNoFirestore(value);
 
     
+  };
+  
+  const pickImageAsync = async () => {
+    if (Platform.OS === 'web') {
+      // Web: apenas galeria
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
 
-  useEffect(() => {
-    getCategoryList();
-  }, [])
+      if (!result.canceled && result.assets?.length > 0) {
+        setImage(result.assets[0]?.uri);
+        setNomeImagem(result.assets[0]?.fileName)
+      } else {
+        Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
+      }
+    } else {
+      // Mobile: oferece opções
+      Alert.alert(
+        'Selecionar imagem',
+        'Escolha a origem da imagem',
+        [
+          {
+            text: 'Câmera',
+            onPress: async () => {
+              const permission = await ImagePicker.requestCameraPermissionsAsync();
+              if (permission.granted) {
+                const result = await ImagePicker.launchCameraAsync({
+                  allowsEditing: true,
+                  quality: 1,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  setImage(result.assets[0]?.uri);
+                  setNomeImagem(result.assets[0]?.fileName)
+                } else {
+                  Alert.alert('Nenhuma foto', 'Você não tirou nenhuma foto.');
+                }
+              } else {
+                Alert.alert('Permissão negada', 'Permissão da câmera foi negada.');
+              }
+            },
+          },
+          {
+            text: 'Galeria',
+            onPress: async () => {
+              const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (permission.granted) {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  quality: 1,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  setImage(result.assets[0]?.uri);
+                  setNomeImagem(result.assets[0]?.fileName)
+                } else {
+                  Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
+                }
+              } else {
+                Alert.alert('Permissão negada', 'Permissão da galeria foi negada.');
+              }
+            },
+          },
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+  
+
+
+
+
+const onSubmitMethod = async (value) => {
+  
+  setValue(value)
+
+  setLoading(true)
+  try {
+
+    // let base64Image;
+
+    if (Platform.OS === 'web') {
+      const imagem = await fetch(image);
+      const binario = await imagem.blob();
+    
+      const reader = new FileReader();
+      reader.readAsDataURL(binario);
+    
+      reader.onloadend = async () => {
+        // const base64Original = reader.result.split(',')[1]; // remove o prefixo
+        // const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+    
+        // if (base64Comprimida) {      
+        
+        if(token == null){
+          googleLogin() 
+        }else{
+          await uploadImageToDrive(token)
+        }
+        // } else {
+          // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+        // }
+      };
+    }
+     else {
+      // Mobile: usa FileSystem
+      const imagem = await FileSystem.readAsStringAsync(image
+      //    {
+      //   encoding: FileSystem.EncodingType.Base64,
+      // }
+          );
+          
+    
+      // const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+      // if (base64Comprimida) {
+
+
+      if(token == null){
+        googleLogin() 
+      }else{
+        await uploadImageToDrive(token)
+      }
+      // } else {
+        // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+      // }
+    }
+    
+  } catch (error) {
+    console.error("Erro ao enviar post:", error);
+    alert("Erro ao enviar post.");
+  }
+
+
+};
   
   async function comprimirImagem (uri) {
     let qualidade = 1.0;
@@ -68,81 +292,16 @@ export default function AddPostScreen () {
 
     });
   }
-
   
-
-  const pickImageAsync = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImage(result.assets[0].uri);
-    } else {
-      alert('Você não selecionou nenhuma imagem.');
-    }
-  };
-  
-
-  
-
-  const onSubmitMethod = async (value) => {
-    setLoading(true)
-
-    
-
-    try {
-      let base64Image;
-  
-      if (Platform.OS === 'web') {
-        const response = await fetch(image);
-        const blob = await response.blob();
-      
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-      
-        reader.onloadend = async () => {
-          const base64Original = reader.result.split(',')[1]; // remove o prefixo
-          const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
-      
-          if (base64Comprimida) {
-            await salvarNoFirestore(base64Comprimida, value);
-          } else {
-            console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
-          }
-        };
-      }
-       else {
-        // Mobile: usa FileSystem
-        const base64Original = await FileSystem.readAsStringAsync(image, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-      
-        const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
-      
-        if (base64Comprimida) {
-          await salvarNoFirestore(base64Comprimida, value);
-        } else {
-          console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
-        }
-      }
-      
-    } catch (error) {
-      console.error("Erro ao enviar post:", error);
-      alert("Erro ao enviar post.");
-    }
-  };
-  
-  const salvarNoFirestore = async (base64Image, value) => {
+  const salvarNoFirestore = async (value) => {
     const postData = {
       title: value.title,
       desc: value.desc,
       category: value.category,
       address: value.address,
       price: value.price,
-      imageBase64: base64Image,
+      imageUrl: imageUrl,
+      // ? imageUrl : base64Comprimida,
       userName: user.displayName,
       useremail: user.email,
       userImage: user.photoURL,
@@ -167,14 +326,14 @@ export default function AddPostScreen () {
     setImage(null);
 
   };
-  
-  
+   
 
     return (
+      <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
       <ScrollView showsVerticalScrollIndicator={false} className='p-10' style={styles.container}>
       <KeyboardAvoidingView>
       <ScrollView >
-        <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
+         <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
         <Formik
         initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'', createAt:Date.now() }}
@@ -264,6 +423,7 @@ style={[
       </ScrollView>
       </KeyboardAvoidingView>
       </ScrollView>
+      </GoogleOAuthProvider>
     )
 }
 
