@@ -8,15 +8,65 @@ import "../global.css"
 import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import { getAuth } from "firebase/auth";
+import {useGoogleLogin} from '@react-oauth/google'
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import axios from "axios"
+
 
 export default function ProductDetailComponent({params, navigation, productLink=null}){
+    const [token, setToken] = useState(null)
+
     const[product, setProduct]=useState([])
     const user = getAuth().currentUser
     const db = getFirestore(app);
+    
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+          try {
+            const userInfoResponse = await axios.get(
+              'https://www.googleapis.com/oauth2/v3/userinfo',
+              {
+                headers: {
+                  Authorization: `Bearer ${tokenResponse.access_token}`,
+                },
+              }
+            );
+    
+            setToken(tokenResponse.access_token);
+    
+            // userInfo = userInfoResponse.data
+            // console.log('User Info:', userInfo);
+    
+    
+          } catch (error) {
+            console.error('Erro ao buscar informações do usuário:', error);
+          }
+        },
+        onError: (errorResponse) => console.log('Erro no login:', errorResponse),
+      });
+
+      
+    const deleteImageFromDrive = async (fileId) => {
+            try {
+                await axios.delete(
+                    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+                    {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    }
+                );
+                console.log("Imagem deletada do Drive com sucesso.");
+                } catch (error) {
+                console.error("Erro ao deletar imagem do Drive:", error);
+                }
+    };
+  
 
     useEffect(()=>{
 
         console.log("teste parametros",params)
+        console.log("teste imagem URL", params.product.imageUrl)
         
         if(productLink !== null){
             setProduct(productLink)
@@ -84,24 +134,29 @@ export default function ProductDetailComponent({params, navigation, productLink=
     }
 
     const deleteUserPost = async () => {
-       if (Platform.OS === 'web') {
-  const confirmDelete = window.confirm("Você tem certeza que deseja excluir este produto?");
-  if (confirmDelete) {
-    handleDelete();
-  }
-} else {
-  Alert.alert(
-    "Confirmar?",
-    "Você tem certeza que deseja excluir este produto?",
-    [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Deletar", onPress: () => handleDelete(), style: "destructive" }
-    ]
-  );
-}
+    if (Platform.OS === 'web') {
+    const confirmDelete = window.confirm("Você tem certeza que deseja excluir este produto?");
+    if (confirmDelete) {
+        handleDelete();
+    }
+    } else {
+    Alert.alert(
+        "Confirmar?",
+        "Você tem certeza que deseja excluir este produto?",
+        [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Deletar", onPress: () => handleDelete(), style: "destructive" }
+        ]
+    );
+    }
 
     };
     const handleDelete = async () => {
+        if(!token){
+            googleLogin()
+            return
+        }
+
         try {
             const db = getFirestore(app);
             const userPostRef = collection(db, 'UserPost');
@@ -109,6 +164,14 @@ export default function ProductDetailComponent({params, navigation, productLink=
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 const docRef = snapshot.docs[0].ref;
+                const imageId = snapshot.docs[0]._document.data.value.mapValue.fields.imageId.stringValue
+               
+            
+
+                await deleteImageFromDrive(imageId);
+                    
+               
+
                 await deleteDoc(docRef);
                 Alert.alert("Success", "Product deleted successfully.");
                 navigation.goBack()
@@ -122,9 +185,10 @@ export default function ProductDetailComponent({params, navigation, productLink=
     }; 
 
     return(
+        <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
             <Image
-                source={{ uri: `data:image/jpeg;base64,${product?.imageBase64}` }}
+                source={{ uri: product?.imageUrl }}
                 className="w-full h-[320px]"
             />
 
@@ -166,6 +230,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
                 }
 
         </ScrollView>
+        </GoogleOAuthProvider>
     )
 }
 

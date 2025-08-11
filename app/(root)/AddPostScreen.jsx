@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Button } from 'react-native'
+import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Button, Alert } from 'react-native'
 import { COLORS } from '../util/COLORS';
 import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
@@ -8,30 +8,23 @@ import { useState, useEffect  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import "../../global.css"
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Platform } from 'react-native';
 import { addDoc } from 'firebase/firestore';
-import {useGoogleLogin} from '@react-oauth/google'
-import * as ImageManipulator from 'expo-image-manipulator';
 import { getAuth } from 'firebase/auth';
 import axios from "axios"
-
-
-
-
+import {useGoogleLogin} from '@react-oauth/google'
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function AddPostScreen () {
-  const [imageUrl, setImageUrl] = useState(null)
   const [token, setToken] = useState(null)
   const [nomeImagem, setNomeImagem] = useState(null)
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
   const [image, setImage] = useState(null)
-  const [value, setValue] = useState(null)
+  // const [value, setValue] = useState(null)
   const user=getAuth().currentUser
     useEffect(() => {
-      googleLogin()
       getCategoryList();
     }, [])
 
@@ -54,8 +47,6 @@ export default function AddPostScreen () {
         userInfo = userInfoResponse.data
         console.log('User Info:', userInfo);
 
-        await uploadImageToDrive(tokenResponse.access_token)
-
 
       } catch (error) {
         console.error('Erro ao buscar informações do usuário:', error);
@@ -64,13 +55,14 @@ export default function AddPostScreen () {
     onError: (errorResponse) => console.log('Erro no login:', errorResponse),
   });
 
-  const uploadImageToDrive = async (accessToken) => {
+  const uploadImageToDrive = async (accessToken, value) => {
   
     const imagem = await fetch(image);
     const binario = await imagem.blob();
   
     const metadata = {
       name: nomeImagem ,
+      parents: ["11MVzH8BVFezzZs-GlozGp0xyWX6jRQs9"]
     };
   
     const form = new FormData();
@@ -107,9 +99,12 @@ export default function AddPostScreen () {
     
      
       const publicUrl = `https://drive.google.com/uc?id=${result.id}`;
-      setImageUrl(publicUrl);
+
+
       console.log('Upload feito:', result);
-      await salvarNoFirestore(value);
+
+
+      await salvarNoFirestore(value, result.id, publicUrl);
 
     
   };
@@ -188,16 +183,7 @@ export default function AddPostScreen () {
     }
   };
 
-  
-
-
-
-
 const onSubmitMethod = async (value) => {
-  
-  setValue(value)
-
-  setLoading(true)
   try {
 
     // let base64Image;
@@ -215,11 +201,15 @@ const onSubmitMethod = async (value) => {
     
         // if (base64Comprimida) {      
         
-        if(token == null){
-          googleLogin() 
-        }else{
-          await uploadImageToDrive(token)
-        }
+          
+      if (!token) {
+        googleLogin(); // Isso vai disparar o login e depois você pode continuar
+        return; // Aguarde o login antes de continuar
+      }
+
+      setLoading(true)
+
+          await uploadImageToDrive(token, value)
         // } else {
           // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
         // }
@@ -238,11 +228,11 @@ const onSubmitMethod = async (value) => {
       // if (base64Comprimida) {
 
 
-      if(token == null){
-        googleLogin() 
-      }else{
-        await uploadImageToDrive(token)
+      if (!token) {
+        googleLogin(); // Isso vai disparar o login e depois você pode continuar
+        return; // Aguarde o login antes de continuar
       }
+        await uploadImageToDrive(token, value)
       // } else {
         // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
       // }
@@ -256,44 +246,7 @@ const onSubmitMethod = async (value) => {
 
 };
   
-  async function comprimirImagem (uri) {
-    let qualidade = 1.0;
-    let imagemComprimida = null;
-  
-    while (qualidade > 0) {
-      const resultado = await ImageManipulator.manipulateAsync(
-        uri,
-        [],
-        { compress: qualidade, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-      );
-  
-      const tamanhoEmBytes = (resultado.base64.length * 3) / 4;
-  
-      if (tamanhoEmBytes <= 1024 * 1024) {
-        imagemComprimida = resultado.base64;
-        break;
-      }
-  
-      qualidade -= 0.1; // Reduz a qualidade gradualmente
-    }
-  
-    return imagemComprimida;
-  };
-
-  const getCategoryList=async ()=>{
-    setCategoryList([])
-    const querySnapshot = await getDocs(collection(db, "Category"));
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-
-      console.log(doc.id, " => ", doc.data());
-      setCategoryList(categoryList => [...categoryList, doc.data()])
-      
-
-    });
-  }
-  
-  const salvarNoFirestore = async (value) => {
+  const salvarNoFirestore = async (value, imageId, imageUrl) => {
     const postData = {
       title: value.title,
       desc: value.desc,
@@ -301,6 +254,7 @@ const onSubmitMethod = async (value) => {
       address: value.address,
       price: value.price,
       imageUrl: imageUrl,
+      imageId: imageId,
       // ? imageUrl : base64Comprimida,
       userName: user.displayName,
       useremail: user.email,
@@ -327,6 +281,42 @@ const onSubmitMethod = async (value) => {
 
   };
    
+  // async function comprimirImagem (uri) {
+  //   let qualidade = 1.0;
+  //   let imagemComprimida = null;
+  
+  //   while (qualidade > 0) {
+  //     const resultado = await ImageManipulator.manipulateAsync(
+  //       uri,
+  //       [],
+  //       { compress: qualidade, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  //     );
+  
+  //     const tamanhoEmBytes = (resultado.base64.length * 3) / 4;
+  
+  //     if (tamanhoEmBytes <= 1024 * 1024) {
+  //       imagemComprimida = resultado.base64;
+  //       break;
+  //     }
+  
+  //     qualidade -= 0.1; // Reduz a qualidade gradualmente
+  //   }
+  
+  //   return imagemComprimida;
+  // };
+
+  const getCategoryList=async ()=>{
+    setCategoryList([])
+    const querySnapshot = await getDocs(collection(db, "Category"));
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+
+      console.log(doc.id, " => ", doc.data());
+      setCategoryList(categoryList => [...categoryList, doc.data()])
+      
+
+    });
+  }
 
     return (
       <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">

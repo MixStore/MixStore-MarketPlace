@@ -6,7 +6,7 @@ import PostItem from "./PostItem";
 export default function LatestItemList({ latestItemList, heading }) {
   useEffect(() => {
     latestItemList.forEach((item, index) => {
-      console.log(`Imageeeem ${index}:`, item.imageBase64?.substring(0, 100) + '...');
+      console.log(`Imageeeem ${index}:`, item.imagUrl?.substring(0, 100) + '...');
     });
   }, [latestItemList]);
 
