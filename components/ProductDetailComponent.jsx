@@ -1,3 +1,5 @@
+
+import { Modal, Clipboard, ToastAndroid } from 'react-native';
 import { query, where, deleteDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Share, Alert } from "react-native";
@@ -11,6 +13,8 @@ import { getAuth } from "firebase/auth";
 import {useGoogleLogin} from '@react-oauth/google'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import axios from "axios"
+import FlashMessage, { showMessage } from 'react-native-flash-message'
+
 
 
 export default function ProductDetailComponent({params, navigation, productLink=null}){
@@ -19,49 +23,30 @@ export default function ProductDetailComponent({params, navigation, productLink=
     const[product, setProduct]=useState([])
     const user = getAuth().currentUser
     const db = getFirestore(app);
-    
-    const googleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-          try {
-            const userInfoResponse = await axios.get(
-              'https://www.googleapis.com/oauth2/v3/userinfo',
-              {
-                headers: {
-                  Authorization: `Bearer ${tokenResponse.access_token}`,
-                },
-              }
-            );
-    
-            setToken(tokenResponse.access_token);
-    
-            // userInfo = userInfoResponse.data
-            // console.log('User Info:', userInfo);
-    
-    
-          } catch (error) {
-            console.error('Erro ao buscar informações do usuário:', error);
-          }
-        },
-        onError: (errorResponse) => console.log('Erro no login:', errorResponse),
-      });
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showPixModal, setShowPixModal] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-      
-    const deleteImageFromDrive = async (fileId) => {
-            try {
-                await axios.delete(
-                    `https://www.googleapis.com/drive/v3/files/${fileId}`,
-                    {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    }
-                );
-                console.log("Imagem deletada do Drive com sucesso.");
-                } catch (error) {
-                console.error("Erro ao deletar imagem do Drive:", error);
-                }
+    const pagarComPix = () => {
+        setShowPixModal(true);
     };
-  
+
+    const copyToClipboard = () => {
+        Clipboard.setString(product.codigoCobrancaPix);
+        setCopied(true);
+        setShowConfirmation(true);
+        showToast("Código copiado!", "success");
+    };
+    
+ function showToast(message, type = 'success') {
+    showMessage({
+      message,
+      type, // 'success', 'danger', 'info'
+      duration: 3000,
+      position: 'bottom',
+    })
+  }
+
 
     useEffect(()=>{
 
@@ -81,8 +66,10 @@ export default function ProductDetailComponent({params, navigation, productLink=
 
     const shareButton=()=>{
         navigation.setOptions({
-            headerRight: () => (
+            headerRight: () => (<>
+              <Ionicons  onPress={()=>sendEmailMessage()} name="document-text-sharp" size={24} color="white" style={{ marginRight: 15 }} />
               <Ionicons  onPress={()=>shareProduct()} name="share-social-sharp" size={24} color="white" style={{ marginRight: 15 }} />
+              </>
             )
           });          
     }
@@ -116,8 +103,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
                 console.error("Erro ao compartilhar:", error);
               }
         }
-      };
-      
+    };
       
     const sendEmailMessage=()=>{
         const title = product.title
@@ -151,11 +137,12 @@ export default function ProductDetailComponent({params, navigation, productLink=
     }
 
     };
+
     const handleDelete = async () => {
-        if(!token){
-            googleLogin()
-            return
-        }
+        // if(!token){
+        //     googleLogin()
+        //     return
+        // }
 
         try {
             const db = getFirestore(app);
@@ -164,11 +151,8 @@ export default function ProductDetailComponent({params, navigation, productLink=
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 const docRef = snapshot.docs[0].ref;
-                const imageId = snapshot.docs[0]._document.data.value.mapValue.fields.imageId.stringValue
-               
-            
-
-                await deleteImageFromDrive(imageId);
+                // const imageId = snapshot.docs[0]._document.data.value.mapValue.fields.imageId.stringValue
+                // await deleteImageFromDrive(imageId);
                     
                
 
@@ -184,24 +168,157 @@ export default function ProductDetailComponent({params, navigation, productLink=
         }
     }; 
 
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+          try {
+            const userInfoResponse = await axios.get(
+              'https://www.googleapis.com/oauth2/v3/userinfo',
+              {
+                headers: {
+                  Authorization: `Bearer ${tokenResponse.access_token}`,
+                },
+              }
+            );
+    
+            setToken(tokenResponse.access_token);
+    
+            // userInfo = userInfoResponse.data
+            // console.log('User Info:', userInfo);
+    
+    
+          } catch (error) {
+            console.error('Erro ao buscar informações do usuário:', error);
+          }
+        },
+        onError: (errorResponse) => console.log('Erro no login:', errorResponse),
+    });
+
+    const deleteImageFromDrive = async (fileId) => {
+            try {
+                await axios.delete(
+                    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+                    {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    }
+                );
+                console.log("Imagem deletada do Drive com sucesso.");
+                } catch (error) {
+                console.error("Erro ao deletar imagem do Drive:", error);
+                }
+    };
+  
+
     return(
         <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            <Image
-                source={{ uri: product?.imageUrl }}
-                className="w-full h-[320px]"
-            />
 
+        <Modal
+            visible={showPixModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => {setShowPixModal(false)
+                setShowConfirmation(false)
+            }}
+            >
+            <View style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0,0,0,0.5)'
+            }}>
+                <View style={{
+                backgroundColor: 'white',
+                padding: 20,
+                borderRadius: 10,
+                alignItems: 'center',
+                width: '80%'
+                }}>
+                {showConfirmation ? (
+                    <>
+                    
+                    <Image
+                        source={require("../assets/images/confirm.png")}
+                        style={{ width: 200, height: 200, marginBottom: 20 }}
+                        resizeMode="contain"
+                    />
+
+                    <Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 10 }}>
+                        Ótimo, agora só falta enviar o comprovante de pagamento para o WhatsApp da MixStore!
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            Linking.openURL(`https://api.whatsapp.com/send?phone=5592984744917&text=Olá!%20Estou%20realizando%20uma%20compra%20pela%20loja%20e%20logo%20envio%20o%20comprovante!.`)
+                            setShowPixModal(false)
+                            setShowConfirmation(false)
+                        }}
+                        style={{ backgroundColor: '#25D366', padding: 10, borderRadius: 5 }}
+                    >
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Enviar para WhatsApp</Text>
+                    </TouchableOpacity>
+                    </>
+                ) : (
+                    <>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pagamento via Pix</Text>
+                    <Image
+                        source={{ uri: `data:image/png;base64,${product.imageBase64QrCodePix}` }}
+                        style={{ width: 200, height: 200, marginBottom: 20 }}
+                        resizeMode="contain"
+                    />
+                    <Text style={{ marginBottom: 10, textAlign: 'center' }}>{product.codigoCobrancaPix}</Text>
+                    <TouchableOpacity onPress={copyToClipboard} style={{
+                        backgroundColor: '#4CAF50',
+                        padding: 10,
+                        borderRadius: 5
+                    }}>
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Copiar código Pix</Text>
+                    </TouchableOpacity>
+                    </>
+                )}
+                <TouchableOpacity onPress={() => {setShowPixModal(false)
+                    setShowConfirmation(false)
+                }} style={{ marginTop: 15 }}>
+                    <Text style={{ color: 'gray' }}>Fechar</Text>
+                </TouchableOpacity>
+                </View>
+            </View>
+            </Modal>
+
+
+
+
+        <Image
+            source={{ uri: `data:image/jpeg;base64,${product?.imageBase64}` }}
+            className="w-full aspect-[3/2]" 
+            resizeMode="cover"
+        />
+
+
+            
             <View className="p-3">
             <Text className="text-[20px] font-bold">{product.title}</Text>
-                <View className="items-baseline">
-                    <Text className="bg-orange-100 text-gray-400 p-1 px-2 text-center  mt-2 rounded-full text-[10px] w-[70px]" >
-                        {product.category}
-                    </Text>
-                </View>
-            <Text className="mt-3 font-bold text-[20px]">Decription</Text>
+
+           
+
+            <Text className="mt-3 font-bold text-[20px]">Preço</Text>
+            <Text className="text-[20px] font-bold" style={styles.price}  >R$: {product.price} </Text>
+
+
+            <Text className="mt-3 font-bold text-[20px]">Descrição</Text>
             <Text className="text-[17px] text-gray-500">{product.desc}</Text>
+
+
+            <Text className="mt-3 font-bold text-[20px]">Endereços de entrega</Text>
+            <Text className="text-[17px] text-gray-500">{product.address}</Text>
             </View>
+
+            <View className="m-3 items-baseline">
+                <Text className="bg-orange-100 text-gray-400 p-1 px-2 text-center rounded-full text-[10px] w-[70px]">
+                {product.category}
+                </Text>
+            </View>
+
 
             <View style={styles.userContainer} className="p-3  flex flex-row items-center gap-3 border-[1px] border-gray-400">
                 <Image source={{uri:product?.userImage}} 
@@ -223,11 +340,13 @@ export default function ProductDetailComponent({params, navigation, productLink=
                 : 
                 
                 <TouchableOpacity
-            onPress={()=>sendEmailMessage()}
+            onPress={()=>pagarComPix()}
             className="z-40 p-4 m-2 rounded-full" style={styles.button} >
-                <Text className="text-center text-white font-bold" >Enviar Mensagem</Text>
+                <Text className="text-center text-white font-bold" > Pagar Com Pix </Text>
             </TouchableOpacity>
                 }
+
+             <FlashMessage position="bottom" />
 
         </ScrollView>
         </GoogleOAuthProvider>
@@ -258,4 +377,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
+    price: {
+      color: COLORS.income
+    },
 });

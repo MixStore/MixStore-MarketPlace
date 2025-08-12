@@ -4,7 +4,7 @@ import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
 import { getFirestore } from "firebase/firestore"
 import { collection, getDocs} from "firebase/firestore";
-import { useState, useEffect  } from 'react';
+import { useState, useEffect, useRef  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import "../../global.css"
@@ -14,22 +14,28 @@ import { getAuth } from 'firebase/auth';
 import axios from "axios"
 import {useGoogleLogin} from '@react-oauth/google'
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
+import * as Asset from 'expo-asset';
 
 export default function AddPostScreen () {
   const [token, setToken] = useState(null)
   const [nomeImagem, setNomeImagem] = useState(null)
+  const [image, setImage] = useState(null)
+  const [imageQrCode, setImageQrCode] = useState(null)
+  const [nomeQrCodeImage, setNomeQrCodeImage] = useState(null)
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
-  const [image, setImage] = useState(null)
+  const formikRef = useRef();
+
+
   // const [value, setValue] = useState(null)
   const user=getAuth().currentUser
     useEffect(() => {
       getCategoryList();
     }, [])
 
-
-  
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -108,6 +114,22 @@ export default function AddPostScreen () {
 
     
   };
+
+const carregarImagem = async () => {
+  const response = await fetch('/pixQrCodePadrao.png');
+  const blob = await response.blob();
+
+  return await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(`data:image/png;base64,${base64}`);
+    };
+    reader.readAsDataURL(blob);
+  });
+};
+
+
   
   const pickImageAsync = async () => {
     if (Platform.OS === 'web') {
@@ -183,84 +205,184 @@ export default function AddPostScreen () {
     }
   };
 
-const onSubmitMethod = async (value) => {
-  try {
 
-    // let base64Image;
-
+  const pickQrCodeImageAsync = async () => {
     if (Platform.OS === 'web') {
-      const imagem = await fetch(image);
-      const binario = await imagem.blob();
-    
-      const reader = new FileReader();
-      reader.readAsDataURL(binario);
-    
-      reader.onloadend = async () => {
-        // const base64Original = reader.result.split(',')[1]; // remove o prefixo
-        // const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
-    
-        // if (base64Comprimida) {      
-        
-          
-      if (!token) {
-        googleLogin(); // Isso vai disparar o login e depois você pode continuar
-        return; // Aguarde o login antes de continuar
-      }
+      // Web: apenas galeria
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
 
+      if (!result.canceled && result.assets?.length > 0) {
+        setImageQrCode(result.assets[0]?.uri);
+        setNomeQrCodeImage(result.assets[0]?.fileName)
+      } else {
+        Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
+      }
+    } else {
+      // Mobile: oferece opções
+      Alert.alert(
+        'Selecionar imagem',
+        'Escolha a origem da imagem',
+        [
+          {
+            text: 'Galeria',
+            onPress: async () => {
+              const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (permission.granted) {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  quality: 1,
+                });
+
+                if (!result.canceled && result.assets?.length > 0) {
+                  setImage(result.assets[0]?.uri);
+                  setNomeImagem(result.assets[0]?.fileName)
+                } else {
+                  Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
+                }
+              } else {
+                Alert.alert('Permissão negada', 'Permissão da galeria foi negada.');
+              }
+            },
+          },
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+  async function comprimirImagem (uri) {
+    let qualidade = 1.0;
+    let imagemComprimida = null;
+  
+    while (qualidade > 0) {
+      const resultado = await ImageManipulator.manipulateAsync(
+        uri,
+        [],
+        { compress: qualidade, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+  
+      const tamanhoEmBytes = (resultado.base64.length * 3) / 4;
+  
+      if (tamanhoEmBytes <= 1024 * 1024) {
+        imagemComprimida = resultado.base64;
+        break;
+      }
+  
+      qualidade -= 0.1; // Reduz a qualidade gradualmente
+    }
+  
+    return imagemComprimida;
+  };
+
+  const onSubmitMethod = async (value) => {
+    try {
       setLoading(true)
 
-          await uploadImageToDrive(token, value)
-        // } else {
-          // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+      let base64Image;
+
+        if (Platform.OS === 'web') {
+          const imagem = await fetch(image);
+          const binario = await imagem.blob();
+          const base64Original = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve(reader.result.split(',')[1]); // remove o prefixo
+            };
+            reader.readAsDataURL(binario);
+          });
+        
+          const imagemQrCode = await fetch(imageQrCode);
+          const binarioQrCode = await imagemQrCode.blob();
+          const base64QrCodeOriginal = await new Promise((resolve) => {
+            const readerQrCode = new FileReader();
+            readerQrCode.onloadend = () => {
+              resolve(readerQrCode.result.split(',')[1]); // remove o prefixo
+            };
+            readerQrCode.readAsDataURL(binarioQrCode);
+          });
+        
+          console.log("Base64 original:", base64Original?.slice(0, 100));
+          console.log("Base64 comprimida:", base64QrCodeOriginal?.slice(0, 100));
+
+          const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+          const base64QrCodeComprimida = await comprimirImagem(`data:image/jpeg;base64,${base64QrCodeOriginal}`);
+
+         
+
+        
+          if (base64Comprimida) {
+            await salvarNoFirestore(value, base64Comprimida, base64QrCodeComprimida);
+          } else {
+            console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+          }
+        }
+        
+      
+      else {
+        const imagem = await FileSystem.readAsStringAsync(image, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const imagemQrCode = await FileSystem.readAsStringAsync(imageQrCode, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${imagem}`);
+        const base64ComprimidaQrCode = await comprimirImagem(`data:image/jpeg;base64,${imagemQrCode}`);
+
+        
+        
+        if (base64Comprimida) {
+        // if (!token) {
+          // googleLogin(); // Isso vai disparar o login e depois você pode continuar
+          // return; // Aguarde o login antes de continuar
         // }
-      };
-    }
-     else {
-      // Mobile: usa FileSystem
-      const imagem = await FileSystem.readAsStringAsync(image
-      //    {
-      //   encoding: FileSystem.EncodingType.Base64,
-      // }
-          );
-          
-    
-      // const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
-      // if (base64Comprimida) {
-
-
-      if (!token) {
-        googleLogin(); // Isso vai disparar o login e depois você pode continuar
-        return; // Aguarde o login antes de continuar
+          // await uploadImageToDrive(token, value)
+          await salvarNoFirestore(value, base64Comprimida, base64ComprimidaQrCode);
+        } else {
+          console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+        }
       }
-        await uploadImageToDrive(token, value)
-      // } else {
-        // console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
-      // }
+      
+    } catch (error) {
+      
+      console.error("Erro ao enviar post:", error?.message || error);
+      alert(`Erro ao enviar post: ${error?.message || error}`);
+
+      setLoading(false)
     }
-    
-  } catch (error) {
-    console.error("Erro ao enviar post:", error);
-    alert("Erro ao enviar post.");
-  }
-
-
-};
+  };
   
-  const salvarNoFirestore = async (value, imageId, imageUrl) => {
+  const salvarNoFirestore = async (value, base64Comprimida, base64QrCodeComprimida) => {
+    // if(!base64QrCodeComprimida){
+      const base64QrCodePadrao = await carregarImagem(require('../../assets/images/pixQrCodePadrao.png'));
+      const base64QrCodeCompressedPADRAO = comprimirImagem(base64QrCodePadrao)
+    // }
+    const codigoPixPadrao = '00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E';
+
     const postData = {
       title: value.title,
       desc: value.desc,
       category: value.category,
       address: value.address,
       price: value.price,
-      imageUrl: imageUrl,
-      imageId: imageId,
-      // ? imageUrl : base64Comprimida,
-      userName: user.displayName,
+      imageBase64: base64Comprimida,
+      codigoCobrancaPix: value.codigoCobrancaPix || codigoPixPadrao,
+      imageBase64QrCodePix: base64QrCodeComprimida ? base64QrCodeComprimida : base64QrCodeCompressedPADRAO ,
       useremail: user.email,
       userImage: user.photoURL,
       createdAt: new Date(),
     };
+    console.log("Dados do post:", postData);
+
+
   
     try{
       await addDoc(collection(db, "UserPost"), postData);
@@ -277,44 +399,19 @@ const onSubmitMethod = async (value) => {
     value.category = ''
     value.address = ''
     value.price = ''
+    value.codigoCobrancaPix = ''
+
     setImage(null);
 
   };
    
-  // async function comprimirImagem (uri) {
-  //   let qualidade = 1.0;
-  //   let imagemComprimida = null;
-  
-  //   while (qualidade > 0) {
-  //     const resultado = await ImageManipulator.manipulateAsync(
-  //       uri,
-  //       [],
-  //       { compress: qualidade, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-  //     );
-  
-  //     const tamanhoEmBytes = (resultado.base64.length * 3) / 4;
-  
-  //     if (tamanhoEmBytes <= 1024 * 1024) {
-  //       imagemComprimida = resultado.base64;
-  //       break;
-  //     }
-  
-  //     qualidade -= 0.1; // Reduz a qualidade gradualmente
-  //   }
-  
-  //   return imagemComprimida;
-  // };
-
   const getCategoryList=async ()=>{
     setCategoryList([])
     const querySnapshot = await getDocs(collection(db, "Category"));
     querySnapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
-
       console.log(doc.id, " => ", doc.data());
       setCategoryList(categoryList => [...categoryList, doc.data()])
-      
-
     });
   }
 
@@ -326,7 +423,10 @@ const onSubmitMethod = async (value) => {
          <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
         <Formik
-        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'', createAt:Date.now() }}
+        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'', createAt:Date.now(), 
+          codigoCobrancaPix: '',
+          imageBase64QrCode: ''
+           }}
         onSubmit={value => onSubmitMethod(value)}
         validate={(values) =>{
           const errors={}
@@ -340,22 +440,26 @@ const onSubmitMethod = async (value) => {
           {({handleChange, handleBlur, handleSubmit, values, setFieldValue, errors}) =>(
             <View>
 
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
               <TouchableOpacity onPress={pickImageAsync}>
-              {
-                image
-               
-                ?
-                
-                <Image source={{uri:image}} style={styles.image} /> 
-                
-                :
-                
-                <Image source={require("../../assets/images/placeholder.jpg")} style={styles.image} />
-              }
-              
-
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.image} />
+                ) : (
+                  <Image source={require("../../assets/images/placeholder.jpg")} style={styles.image} />
+                )}
               </TouchableOpacity>
+
+              <TouchableOpacity onPress={pickQrCodeImageAsync}>
+                {imageQrCode ? (
+                  <Image source={{ uri: imageQrCode }} style={styles.image} />
+                ) : (
+                  <Image source={require("../../assets/images/pixQrCodePadrao.png")} style={styles.imageopaccity} />
+                )}
+              </TouchableOpacity>
+            </View>
+
               
+            
               <TextInput 
               style={styles.textInput}
               placeholder='Título'
@@ -378,9 +482,18 @@ const onSubmitMethod = async (value) => {
               />
               <TextInput 
               style={styles.textInput}
-              placeholder='Address'
+              placeholder='Endereços de entrega'
               value={values?.address}
               onChangeText={handleChange('address')}
+              />
+              
+              <TextInput
+                style={styles.textInput}
+                placeholder='00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E'
+                placeholderTextColor='rgba(0, 0, 0, 0.4)'
+                defaultValue='00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E'
+                value={values?.codigoCobrancaPix}
+                onChangeText={handleChange('codigoCobrancaPix')}
               />
 
 
@@ -402,7 +515,7 @@ style={[
     { backgroundColor: loading ? COLORS.shadow : COLORS.primary }
   ]}
  disabled={loading} >
-                {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <></> }
+                {loading ? <ActivityIndicator size={'large'} color={COLORS.primary} /> : <></> }
 
 
                 <Text style={styles.buttonText} > Enviar </Text>
@@ -457,6 +570,13 @@ const styles = StyleSheet.create({
     width: 135,
     height: 100,
     borderRadius: 10
+   },
+   imageopaccity:{
+    width: 135,
+    height: 100,
+    borderRadius: 10,
+    borderColor:"black",
+    opacity:0.5
    }
 });
 
