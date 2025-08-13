@@ -8,11 +8,15 @@ import logout from "../../../assets/IconsProfileScreen/logout.png"
 import meusProdutos from "../../../assets/IconsProfileScreen/meusProdutos.png"
 import { getAuth, signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from 'react';
+
 
 
 
 export default function ProfileScreen () {
   const  user  = getAuth().currentUser
+  const [userData, setUserData] = useState(null);
   const navigation = useNavigation();
   const router = useRouter()
   const menuList = [
@@ -40,6 +44,28 @@ export default function ProfileScreen () {
       icon: logout,
     }
   ]
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const auth = getAuth();
+      const db = getFirestore();
+      const user = auth.currentUser;
+  
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+  
+        if (userDocSnap.exists()) {
+          setUserData(userDocSnap.data());
+        } else {
+          console.warn("Documento do usuário não encontrado no Firestore.");
+        }
+      }
+    };
+  
+    fetchUserData();
+  }, []);
+  
 
   const handleSignOut = async () => {
     try {
@@ -78,8 +104,23 @@ export default function ProfileScreen () {
   return (
        <ScrollView style={styles.container} className='p-5 flex-1' showsVerticalScrollIndicator={false} >  
            <View className='items-center'> 
-           <Ionicons size={300} name="person-circle-outline"/>
-            <Text className='font-bold text-[25px]' > {user?.username} </Text>
+           {userData?.photoURL  ? (
+              <Image
+                source={{ uri: userData.photoURL  }}
+                style={{
+                  width: 150,
+                  height: 150,
+                  borderRadius: 75,
+                  borderWidth: 2,
+                  borderColor: COLORS.primary,
+                }}
+                
+              />
+            ) : (
+              <Ionicons size={150} name="person-circle-outline" />
+            )}
+
+            <Text className='font-bold text-[25px]' > {user?.displayName} </Text>
             <Text className='text-[14px] text-gray-400'  > {user?.email} </Text>
           </View>
 

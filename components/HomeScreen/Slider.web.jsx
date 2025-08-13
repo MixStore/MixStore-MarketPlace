@@ -53,7 +53,7 @@ const imageHeight = imageWidth * 9 / 16
       
 
  
-<ScrollView
+      <ScrollView
   ref={scrollRef}
   horizontal
   pagingEnabled
@@ -65,7 +65,7 @@ const imageHeight = imageWidth * 9 / 16
     <View
       key={index}
       style={{
-        width: screenWidth, // cada slide ocupa a tela inteira
+        width: screenWidth,
         justifyContent: "center",
         alignItems: "center",
       }}
@@ -74,24 +74,39 @@ const imageHeight = imageWidth * 9 / 16
         source={{ uri: `data:image/jpeg;base64,${item.image}` }}
         style={{
           width: imageWidth,
-          height: imageHeight/2,
+          height: imageHeight / 1.5,
           resizeMode: "stretch",
           borderRadius: 10,
-          backgroundColor: "#fff", // espaço em branco ao redor
+          backgroundColor: "#fff",
         }}
       />
+      {/* Contador abaixo da imagem */}
     </View>
   ))}
+
 </ScrollView>
+<View
+        style={{
+          marginTop: 8,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 20,
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 10 }}>
+          Próx. imagem em {timer}s
+        </Text>
+      </View>
       {/* Botão Anterior */}
       <TouchableOpacity
         onPress={goToPrev}
         style={{
           position: "absolute",
           left: 10,
-          top: "50%",
+          top: "40%",
           transform: [{ translateY: -20 }],
-          backgroundColor: "rgba(0,0,0,0.4)",
+          backgroundColor: "rgba(0,0,0,0.2)",
           padding: 10,
           borderRadius: 20,
         }}
@@ -106,30 +121,15 @@ const imageHeight = imageWidth * 9 / 16
         style={{
           position: "absolute",
           right: 10,
-          top: "50%",
+          top: "40%",
           transform: [{ translateY: -20 }],
-          backgroundColor: "rgba(0,0,0,0.4)",
+          backgroundColor: "rgba(0,0,0,0.2)",
           padding: 10,
           borderRadius: 20,
         }}
       >
         <Text style={{ color: "#fff", fontSize: 20 }}>›</Text>
       </TouchableOpacity>
-
-      <View
-        style={{
-          position: "absolute",
-          bottom: 20,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          borderRadius: 20,
-        }}
-      >
-        <Text style={{ color: "#fff", fontSize: 8 }}>
-          Próxima imagem em {timer}s
-        </Text>
-      </View>
     </View>
   );
 }
