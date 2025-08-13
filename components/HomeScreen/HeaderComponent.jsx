@@ -37,22 +37,17 @@ export default function HeaderComponent() {
         </View>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={24} color="gray" />
-        <TextInput
-          style={[styles.textInput, { fontSize: inputFontSize }]}
-          placeholder="Pesquisa"
-          onChangeText={(value) => console.log(value)}
-          placeholderTextColor="#999"
-        />
-      </View>
+      
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingStart: 16 ,
+    paddingEnd: 0 ,
     backgroundColor: COLORS.background,
   },
   headerRow: {

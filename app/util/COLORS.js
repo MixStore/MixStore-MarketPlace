@@ -134,6 +134,25 @@ const cosmicTheme = {
   red: "#FF0000",
 };
 
+const casaRochaTheme = {
+
+
+  primary: "#C8102E",         // Vermelho institucional forte
+  background: "#FFFFFF",      // Fundo branco limpo
+  darkBackground: "#8B0000",  // Vermelho escuro para contraste
+  text: "#0033A0",            // Azul profundo para textos
+  border: "#D3D3D3",          // Cinza claro para bordas
+  white: "#FFFFFF",
+  textLight: "#90CAF9",       // Azul claro para textos secundários
+  expense: "#C62828",         // Vermelho para despesas
+  income: "#2E7D32",          // Verde para receitas
+  card: "#F9F9F9",            // Fundo de cards levemente cinza
+  shadow: "#000000",
+  accent: "#5D4037",          
+
+};
+
+
 
 
 
@@ -149,6 +168,7 @@ const cosmicTheme = {
     ice: iceTheme,
     blossom: blossomTheme,
     cosmic: cosmicTheme,
+    casaRocha: casaRochaTheme
   };
 
 

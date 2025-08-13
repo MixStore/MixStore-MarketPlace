@@ -115,22 +115,7 @@ export default function AddPostScreen () {
     
   };
 
-const carregarImagem = async () => {
-  const response = await fetch('/pixQrCodePadrao.png');
-  const blob = await response.blob();
-
-  return await new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result.split(',')[1];
-      resolve(`data:image/png;base64,${base64}`);
-    };
-    reader.readAsDataURL(blob);
-  });
-};
-
-
-  
+ 
   const pickImageAsync = async () => {
     if (Platform.OS === 'web') {
       // Web: apenas galeria
@@ -259,6 +244,106 @@ const carregarImagem = async () => {
     }
   };
 
+  const onSubmitMethod = async (value) => {
+    try {
+      setLoading(true)
+
+      let base64Image;
+
+        if (Platform.OS === 'web') {
+          const imagem = await fetch(image);
+          const binario = await imagem.blob();
+
+          const base64Original = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve(reader.result.split(',')[1]); // remove o prefixo
+            };
+            reader.readAsDataURL(binario);
+          });
+
+          console.log("Base64 original:", base64Original?.slice(0, 100));
+
+          const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
+
+          if(imageQrCode){
+            const imagemQrCode = await fetch(imageQrCode);
+            const binarioQrCode = await imagemQrCode.blob();
+  
+            const base64QrCodeOriginal = await new Promise((resolve) => {
+              const readerQrCode = new FileReader();
+              readerQrCode.onloadend = () => {
+                resolve(readerQrCode.result.split(',')[1]); // remove o prefixo
+              };
+              readerQrCode.readAsDataURL(binarioQrCode);
+            });
+            console.log("Base64QrCode Original :", base64QrCodeOriginal?.slice(0, 100));
+
+            const base64QrCodeComprimida = await comprimirImagem(`data:image/jpeg;base64,${base64QrCodeOriginal}`);
+
+            await salvarNoFirestore(value, base64Comprimida, base64QrCodeComprimida);
+
+            return
+
+          }
+          
+        
+          
+
+         
+
+        
+          if (base64Comprimida) {
+            await salvarNoFirestore(value, base64Comprimida, null);
+          } else {
+            console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+          }
+        }
+        
+      
+      else {
+        const imagem = await FileSystem.readAsStringAsync(image, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${imagem}`);
+
+
+        if(imageQrCode){
+          const imagemQrCode = await FileSystem.readAsStringAsync(imageQrCode, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const base64ComprimidaQrCode = await comprimirImagem(`data:image/jpeg;base64,${imagemQrCode}`);
+          await salvarNoFirestore(value, base64Comprimida);
+
+
+          return
+        }
+      
+
+        
+        
+        if (base64Comprimida) {
+        // if (!token) {
+          // googleLogin(); // Isso vai disparar o login e depois você pode continuar
+          // return; // Aguarde o login antes de continuar
+        // }
+          // await uploadImageToDrive(token, value)
+          await salvarNoFirestore(value, base64Comprimida);
+        } else {
+          console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
+        }
+      }
+      
+    } catch (error) {
+      
+      console.error("Erro ao enviar post:", error?.message || error);
+      alert(`Erro ao enviar post: ${error?.message || error}`);
+
+      setLoading(false)
+    }
+  };
+
   async function comprimirImagem (uri) {
     let qualidade = 1.0;
     let imagemComprimida = null;
@@ -283,89 +368,27 @@ const carregarImagem = async () => {
     return imagemComprimida;
   };
 
-  const onSubmitMethod = async (value) => {
-    try {
-      setLoading(true)
-
-      let base64Image;
-
-        if (Platform.OS === 'web') {
-          const imagem = await fetch(image);
-          const binario = await imagem.blob();
-          const base64Original = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve(reader.result.split(',')[1]); // remove o prefixo
-            };
-            reader.readAsDataURL(binario);
-          });
-        
-          const imagemQrCode = await fetch(imageQrCode);
-          const binarioQrCode = await imagemQrCode.blob();
-          const base64QrCodeOriginal = await new Promise((resolve) => {
-            const readerQrCode = new FileReader();
-            readerQrCode.onloadend = () => {
-              resolve(readerQrCode.result.split(',')[1]); // remove o prefixo
-            };
-            readerQrCode.readAsDataURL(binarioQrCode);
-          });
-        
-          console.log("Base64 original:", base64Original?.slice(0, 100));
-          console.log("Base64 comprimida:", base64QrCodeOriginal?.slice(0, 100));
-
-          const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${base64Original}`);
-          const base64QrCodeComprimida = await comprimirImagem(`data:image/jpeg;base64,${base64QrCodeOriginal}`);
-
-         
-
-        
-          if (base64Comprimida) {
-            await salvarNoFirestore(value, base64Comprimida, base64QrCodeComprimida);
-          } else {
-            console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
-          }
-        }
-        
-      
-      else {
-        const imagem = await FileSystem.readAsStringAsync(image, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const imagemQrCode = await FileSystem.readAsStringAsync(imageQrCode, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const base64Comprimida = await comprimirImagem(`data:image/jpeg;base64,${imagem}`);
-        const base64ComprimidaQrCode = await comprimirImagem(`data:image/jpeg;base64,${imagemQrCode}`);
-
-        
-        
-        if (base64Comprimida) {
-        // if (!token) {
-          // googleLogin(); // Isso vai disparar o login e depois você pode continuar
-          // return; // Aguarde o login antes de continuar
-        // }
-          // await uploadImageToDrive(token, value)
-          await salvarNoFirestore(value, base64Comprimida, base64ComprimidaQrCode);
-        } else {
-          console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
-        }
-      }
-      
-    } catch (error) {
-      
-      console.error("Erro ao enviar post:", error?.message || error);
-      alert(`Erro ao enviar post: ${error?.message || error}`);
-
-      setLoading(false)
-    }
+  const carregarImagem = async () => {
+    const response = await fetch('/pixQrCodePadrao.png');
+    const blob = await response.blob();
+    const mimeType = blob.type; // Ex: "image/png"
+  
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result.split(',')[1];
+        resolve({ base64, mimeType });
+      };
+      reader.readAsDataURL(blob);
+    });
   };
   
   const salvarNoFirestore = async (value, base64Comprimida, base64QrCodeComprimida) => {
-    // if(!base64QrCodeComprimida){
-      const base64QrCodePadrao = await carregarImagem(require('../../assets/images/pixQrCodePadrao.png'));
-      const base64QrCodeCompressedPADRAO = comprimirImagem(base64QrCodePadrao)
-    // }
+
+    const { base64: base64QrCodePadrao, mimeType } = await carregarImagem();
+
     const codigoPixPadrao = '00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E';
+
 
     const postData = {
       title: value.title,
@@ -375,7 +398,7 @@ const carregarImagem = async () => {
       price: value.price,
       imageBase64: base64Comprimida,
       codigoCobrancaPix: value.codigoCobrancaPix || codigoPixPadrao,
-      imageBase64QrCodePix: base64QrCodeComprimida ? base64QrCodeComprimida : base64QrCodeCompressedPADRAO ,
+      imageBase64QrCodePix: base64QrCodeComprimida || base64QrCodePadrao ,
       useremail: user.email,
       userImage: user.photoURL,
       createdAt: new Date(),
@@ -400,7 +423,7 @@ const carregarImagem = async () => {
     value.address = ''
     value.price = ''
     value.codigoCobrancaPix = ''
-
+    setImageQrCode(null)
     setImage(null);
 
   };

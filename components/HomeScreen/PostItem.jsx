@@ -23,16 +23,11 @@ export default function PostItem({item}){
             }}
             resizeMode="contain"
           />
-
-
-   
-                   
                     <View>
                         <Text className="text-gray-400 p-[2px] mt-1 rounded-full px-1 text-[10px] w-[70px]" >{item.category} </Text>
                         <Text className="text-[15px] font-bold mt-2"> {item.title} </Text>
                         <Text className="text-[20px] font-bold" style={styles.price}  >R$: {item.price} </Text>
                     </View>
-        
                   </TouchableOpacity>
     )
 }

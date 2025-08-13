@@ -80,7 +80,7 @@ export default function Page() {
       <View style={stls.container} >
         <Image source={require("../../assets/images/logo.png")} style={stls.illustration} />
       </View>
-        <Text style={styles.textOi}>Olá!</Text>
+        <Text style={styles.textOi}>Olá!!</Text>
       
         {error ? (
           <View style={styles.errorBox}>

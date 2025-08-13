@@ -9,6 +9,7 @@ import { collection, getDocs, getFirestore, orderBy, where } from "firebase/fire
 import { useEffect, useState } from "react";
 import "../../../global.css"
 import { useNavigation } from 'expo-router';
+import TopBarNavigationComponent from '../../../components/TopBarNavigatiomComponent';
 
 
 
@@ -101,6 +102,7 @@ export default function HomeScreen() {
         :
         <>
           <Header/>
+        {/* <TopBarNavigationComponent /> */}
           <Slider sliderList={sliderList} />
           <Categories categoryList={categoryList} />
           <LatestItemList latestItemList={latestItemList} heading={"Últimos itens"} />

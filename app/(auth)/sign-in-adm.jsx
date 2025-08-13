@@ -78,7 +78,7 @@ export default function Page() {
     <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container}>
       <View style={stls.container} >
-        <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
+        <Image source={require("../../assets/images/logo.png")} style={stls.illustration} />
       </View>
         <Text style={styles.textOi}>Olá!</Text>
       
@@ -151,6 +151,11 @@ const stls = StyleSheet.create({
     justifyContent:"center",
     flexDirection: "row",
     gap: 5
+  },
+  illustration: {
+    height: 200,
+    width: 640,
+    resizeMode: "contain",
   },
   button: {
     backgroundColor: COLORS.primary,

@@ -4,14 +4,20 @@ import { View, Image, ScrollView, Dimensions, TouchableOpacity, Text } from "rea
 export default function Slider({ sliderList }) {
   const scrollRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [timer, setTimer] = useState(10);
-  const screenWidth = Dimensions.get("window").width;
+  const [timer, setTimer] = useState(5);
+  
+  
+const screenWidth = Dimensions.get("window").width;
+const imageWidth = screenWidth * 0.9; // imagem menor que a tela
+const imageHeight = imageWidth * 9 / 16
+
+
 
   // Scroll para o próximo slide
   const scrollToIndex = (index) => {
     scrollRef.current?.scrollTo({ x: index * screenWidth, animated: true });
     setCurrentIndex(index);
-    setTimer(10); // reinicia o contador
+    setTimer(5); // reinicia o contador
   };
 
   // Avança para o próximo
@@ -44,44 +50,39 @@ export default function Slider({ sliderList }) {
   return (
     <View style={{ marginTop: 20, position: "relative", alignItems: "center" }}>
       {/* Carrossel */}
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        scrollEnabled={false} // impede scroll manual
-        style={{ width: screenWidth }}
-      >
-        {sliderList.map((item, index) => (
-          <Image
-            key={index}
-            source={{ uri: `data:image/jpeg;base64,${item.image}` }}
-            style={{
-              width: screenWidth,
-              height: 300,
-              resizeMode: "cover",
-              borderRadius: 10,
-            }}
-          />
-        ))}
-      </ScrollView>
+      
 
-      {/* Temporizador */}
-      <View
+ 
+<ScrollView
+  ref={scrollRef}
+  horizontal
+  pagingEnabled
+  showsHorizontalScrollIndicator={false}
+  scrollEnabled={false}
+  style={{ width: screenWidth }}
+>
+  {sliderList.map((item, index) => (
+    <View
+      key={index}
+      style={{
+        width: screenWidth, // cada slide ocupa a tela inteira
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Image
+        source={{ uri: `data:image/jpeg;base64,${item.image}` }}
         style={{
-          position: "absolute",
-          bottom: 20,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          borderRadius: 20,
+          width: imageWidth,
+          height: imageHeight/2,
+          resizeMode: "stretch",
+          borderRadius: 10,
+          backgroundColor: "#fff", // espaço em branco ao redor
         }}
-      >
-        <Text style={{ color: "#fff", fontSize: 14 }}>
-          Próxima imagem em {timer}s
-        </Text>
-      </View>
-
+      />
+    </View>
+  ))}
+</ScrollView>
       {/* Botão Anterior */}
       <TouchableOpacity
         onPress={goToPrev}
@@ -97,6 +98,7 @@ export default function Slider({ sliderList }) {
       >
         <Text style={{ color: "#fff", fontSize: 20 }}>‹</Text>
       </TouchableOpacity>
+      
 
       {/* Botão Próximo */}
       <TouchableOpacity
@@ -113,6 +115,21 @@ export default function Slider({ sliderList }) {
       >
         <Text style={{ color: "#fff", fontSize: 20 }}>›</Text>
       </TouchableOpacity>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: 20,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 20,
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 8 }}>
+          Próxima imagem em {timer}s
+        </Text>
+      </View>
     </View>
   );
 }

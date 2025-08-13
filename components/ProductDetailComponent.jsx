@@ -1,5 +1,5 @@
 
-import { Modal, Clipboard, ToastAndroid } from 'react-native';
+import { Modal, Clipboard, ToastAndroid, Dimensions } from 'react-native';
 import { query, where, deleteDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Share, Alert } from "react-native";
@@ -26,6 +26,10 @@ export default function ProductDetailComponent({params, navigation, productLink=
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [showPixModal, setShowPixModal] = useState(false);
     const [copied, setCopied] = useState(false);
+    
+    const screenWidth = Dimensions.get("window").width;
+    const imageWidth = screenWidth * 0.9; // imagem menor que a tela
+    const imageHeight = imageWidth * 9 / 16
 
     const pagarComPix = () => {
         setShowPixModal(true);
@@ -214,76 +218,81 @@ export default function ProductDetailComponent({params, navigation, productLink=
         <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-        <Modal
+        
+
+                      <Modal
             visible={showPixModal}
             transparent={true}
             animationType="slide"
-            onRequestClose={() => {setShowPixModal(false)
-                setShowConfirmation(false)
-            }}
-            >
+            onRequestClose={() => setShowPixModal(false)}
+          >
             <View style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: 'rgba(0,0,0,0.5)'
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.5)'
             }}>
-                <View style={{
+              <View style={{
                 backgroundColor: 'white',
                 padding: 20,
                 borderRadius: 10,
-                alignItems: 'center',
-                width: '80%'
-                }}>
-                {showConfirmation ? (
+                width: '90%',
+                maxHeight: '80%',
+              }}>
+                <ScrollView contentContainerStyle={{ alignItems: 'center' }}>
+                  {showConfirmation ? (
                     <>
-                    
-                    <Image
-                        source={require("../assets/images/confirm.png")}
-                        style={{ width: 200, height: 200, marginBottom: 20 }}
-                        resizeMode="contain"
-                    />
-
-                    <Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 10 }}>
+                        <Image
+                                      source={require("../assets/images/confirm.png")}
+                                      style={{ width: 200, height: 200, marginBottom: 20 }}
+                                      resizeMode="contain"
+                              />
+                      <Text style={{
+                        fontSize: 16,
+                        textAlign: 'center',
+                        marginBottom: 10,
+                        paddingHorizontal: 10
+                      }}>
                         Ótimo, agora só falta enviar o comprovante de pagamento para o WhatsApp da MixStore!
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Linking.openURL(`https://api.whatsapp.com/send?phone=5592984744917&text=Olá!%20Estou%20realizando%20uma%20compra%20pela%20loja%20e%20logo%20envio%20o%20comprovante!.`)
-                            setShowPixModal(false)
-                            setShowConfirmation(false)
-                        }}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL(`https://api.whatsapp.com/send?phone=5592984744917&text=Olá!%20Estou%20enviando%20o%20comprovante%20de%20pagamento.`)}
                         style={{ backgroundColor: '#25D366', padding: 10, borderRadius: 5 }}
-                    >
+                      >
                         <Text style={{ color: 'white', fontWeight: 'bold' }}>Enviar para WhatsApp</Text>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
                     </>
-                ) : (
+                  ) : (
                     <>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pagamento via Pix</Text>
-                    <Image
+                      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pagamento via Pix</Text>
+                      <Image
                         source={{ uri: `data:image/png;base64,${product.imageBase64QrCodePix}` }}
                         style={{ width: 200, height: 200, marginBottom: 20 }}
                         resizeMode="contain"
-                    />
-                    <Text style={{ marginBottom: 10, textAlign: 'center' }}>{product.codigoCobrancaPix}</Text>
-                    <TouchableOpacity onPress={copyToClipboard} style={{
+                      />
+                      <Text style={{
+                        marginBottom: 10,
+                        textAlign: 'center',
+                        paddingHorizontal: 10
+                      }}>
+                        {product.codigoCobrancaPix}
+                      </Text>
+                      <TouchableOpacity onPress={copyToClipboard} style={{
                         backgroundColor: '#4CAF50',
                         padding: 10,
                         borderRadius: 5
-                    }}>
+                      }}>
                         <Text style={{ color: 'white', fontWeight: 'bold' }}>Copiar código Pix</Text>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
                     </>
-                )}
-                <TouchableOpacity onPress={() => {setShowPixModal(false)
-                    setShowConfirmation(false)
-                }} style={{ marginTop: 15 }}>
+                  )}
+                  <TouchableOpacity onPress={() => setShowPixModal(false)} style={{ marginTop: 15 }}>
                     <Text style={{ color: 'gray' }}>Fechar</Text>
-                </TouchableOpacity>
-                </View>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
             </View>
-            </Modal>
+                      </Modal>
 
 
 

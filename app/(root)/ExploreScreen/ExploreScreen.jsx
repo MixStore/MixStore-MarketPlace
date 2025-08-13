@@ -6,6 +6,7 @@ import { app } from '../../../firebaseConfig';
 import { useCallback, useEffect, useState } from 'react';
 import LatestItemList from '../../../components/HomeScreen/LatestItemList';
 import { useFocusEffect } from 'expo-router';
+import SearchComponent from '../../../components/SearchComponent';
 
 
 
@@ -13,6 +14,12 @@ export default function ExploreScreen () {
   const db=getFirestore(app)  
   const [productList, setProductlist] = useState([])
   const [loading, setLoading] = useState(false)
+  const [searchText, setSearchText] = useState('');
+  const filteredProducts = productList.filter((product) =>
+    product.title?.toLowerCase().includes(searchText.toLowerCase()) 
+    // || product.desc?.toLowerCase().includes(searchText.toLowerCase())
+  );
+  
 
 
   // useEffect(()=>{
@@ -46,7 +53,14 @@ const getAllProducts = async () => {
     return (
       <ScrollView showsHorizontalScrollIndicator={false} className="p-5 py-8" style={styles.container}>
         <Text className='text-[24px] font-bold'> Explorar mais  </Text>
-        {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <LatestItemList latestItemList={productList} />}
+        <SearchComponent
+        
+          value={searchText}
+          onChangeText={(text) => setSearchText(text)}
+
+        />
+        {loading ? <ActivityIndicator className='mt-24' size={'large'} color={COLORS.primary} /> : <LatestItemList latestItemList={filteredProducts} />
+      }
       </ScrollView>
     )
 }

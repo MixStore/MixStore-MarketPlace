@@ -190,8 +190,9 @@ if (pendingVerification) {
     <KeyboardAwareScrollView showsHorizontalScrollIndicator={false} style={{flex:1}} contentContainerStyle={{flexGrow: 1}} enableOnAndroid={true} enableAutomaticScroll={true} extraHeight={100}>
       <View style={styles.container} >
 
-          <Image source={require("../../assets/images/logo.png")} style={styles.illustration} />
-
+      <View style={stls.container} >
+        <Image source={require("../../assets/images/logo.png")} style={stls.illustration} />
+      </View>
           <Text style={styles.title}> Crie sua conta! </Text>
 
           {error ? (
@@ -242,6 +243,11 @@ if (pendingVerification) {
 }
 
 const stls = StyleSheet.create({
+  illustration: {
+    height: 200,
+    width: 640,
+    resizeMode: "contain",
+  },
   container:{
     alignItems:"center"
   },
