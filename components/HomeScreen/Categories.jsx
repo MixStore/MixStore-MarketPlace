@@ -24,7 +24,7 @@ const navigation=useNavigation()
             data={categoryList}
             numColumns={3}
             renderItem={({item, index}) => index<=8&&(
-                <TouchableOpacity style={styles.categories} className="flex flex-1 items-center justify-center border-[1px] border-gray-300 m-1 h-[80px] rounded-lg" onPress={()=>navigation.navigate('ItemList', {
+                <TouchableOpacity style={styles.categories} className="flex flex-1 items-center justify-center border-[1px] border-gray-300 m-1 h-[70px] rounded-lg" onPress={()=>navigation.navigate('ItemList', {
                   category:item.name
                 })}>
                    

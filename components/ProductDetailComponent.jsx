@@ -143,10 +143,6 @@ export default function ProductDetailComponent({params, navigation, productLink=
     };
 
     const handleDelete = async () => {
-        // if(!token){
-        //     googleLogin()
-        //     return
-        // }
 
         try {
             const db = getFirestore(app);
@@ -155,10 +151,6 @@ export default function ProductDetailComponent({params, navigation, productLink=
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 const docRef = snapshot.docs[0].ref;
-                // const imageId = snapshot.docs[0]._document.data.value.mapValue.fields.imageId.stringValue
-                // await deleteImageFromDrive(imageId);
-                    
-               
 
                 await deleteDoc(docRef);
                 Alert.alert("Success", "Product deleted successfully.");

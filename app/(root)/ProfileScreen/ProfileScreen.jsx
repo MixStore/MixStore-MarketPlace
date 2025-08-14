@@ -2,8 +2,8 @@ import { Text, View, StyleSheet, Image, FlatList, TouchableOpacity, ScrollView, 
 import { COLORS } from '../../util/COLORS';
 import { useNavigation, useRouter } from 'expo-router'
 import "../../../global.css"
-import explore from "../../../assets/IconsProfileScreen/explore.png"
-import github from "../../../assets/IconsProfileScreen/github.png"
+import MinhasCompras from "../../../assets/IconsProfileScreen/minhasCompras.png"
+import EditProfile from "../../../assets/IconsProfileScreen/editProfile.png"
 import logout from "../../../assets/IconsProfileScreen/logout.png"
 import meusProdutos from "../../../assets/IconsProfileScreen/meusProdutos.png"
 import { getAuth, signOut } from 'firebase/auth';
@@ -28,15 +28,15 @@ export default function ProfileScreen () {
     },
     {
       id:2,
-      name:'Explorar',
-      icon: explore,
-      path: "ExploreScreen" // This will be used to navigate to ExploreScreen
+      name:'Editar Perfil',
+      icon: EditProfile,
+      path: "EditProfileScreen" // This will be used to navigate to ExploreScreen
     },
     {
       id:3,
-      name:'Meu Github',
-      icon: github,
-      url: "https://github.com/JonathanRebello01"
+      name:'MInhas Compras',
+      icon: MinhasCompras,
+      path: "MinhasComprasScreen"
     },
     {
       id:4,
@@ -120,7 +120,7 @@ export default function ProfileScreen () {
               <Ionicons size={150} name="person-circle-outline" />
             )}
 
-            <Text className='font-bold text-[25px]' > {user?.displayName} </Text>
+            <Text className='font-bold text-[20px]' > {user?.displayName} </Text>
             <Text className='text-[14px] text-gray-400'  > {user?.email} </Text>
           </View>
 

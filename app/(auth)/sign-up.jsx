@@ -31,6 +31,7 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = useState(pendingParam === 'true');
   const [canResend, setCanResend] = useState(true);
   const [cooldown, setCooldown] = useState(0);
+  const [publicUrl, setPublicUrl] = useState(null)
 
   const db = getFirestore(app);
 
@@ -105,11 +106,13 @@ const onSignUpPress = async () => {
     const userCredential = await createUserWithEmailAndPassword(auth, emailAddress, password);
     const user = userCredential.user;
 
-    publicUrl = await uploadToCloudinary(profileImage)
+    if(profileImage){
+      setPublicUrl(await uploadToCloudinary(profileImage))
+    }
 
     await updateProfile(user, {
       displayName: fullName,
-      photoURL: publicUrl || "",
+      photoURL: publicUrl ? publicUrl : "",
     });
 
     await sendEmailVerification(user);
@@ -124,7 +127,9 @@ const onSignUpPress = async () => {
       email: user.email,
       fullName,
       phone,
-      photoURL: publicUrl || "",
+      photoURL: publicUrl ? publicUrl : "",
+      defaultPix: "",
+      defaultQrCode: null,
       createdAt: new Date(),
     });
 

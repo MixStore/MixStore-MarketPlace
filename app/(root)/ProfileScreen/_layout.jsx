@@ -1,5 +1,5 @@
-import { Text, StyleSheet } from "react-native"
-import { Stack } from "expo-router"
+import { StyleSheet } from "react-native"
+import { Stack,useNavigation } from "expo-router"
 import { COLORS } from "../../util/COLORS"
 import "../../../global.css"
 
@@ -25,9 +25,9 @@ export default function ProfileStackLayout(){
           headerTintColor:COLORS.white,
           headerTitle:"Meus produtos"
         })}
-        
       />
-<Stack.Screen
+
+      <Stack.Screen
         name="ProductDetailScreen"
         options={({
           headerStyle: {
@@ -38,6 +38,17 @@ export default function ProfileStackLayout(){
         })}
       />
 
+      <Stack.Screen
+        name="EditProfileScreen"
+        options={{
+          headerStyle: {
+            backgroundColor: COLORS.primary,
+          },
+          headerTintColor: COLORS.white,
+          headerTitle: "Editar Perfil",
+          
+        }}
+      />
     </Stack>
 
 

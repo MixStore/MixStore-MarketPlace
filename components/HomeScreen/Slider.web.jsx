@@ -74,7 +74,7 @@ const imageHeight = imageWidth * 9 / 16
         source={{ uri: `data:image/jpeg;base64,${item.image}` }}
         style={{
           width: imageWidth,
-          height: imageHeight / 1.5,
+          height: imageHeight / 1.25,
           resizeMode: "stretch",
           borderRadius: 10,
           backgroundColor: "#fff",
@@ -88,7 +88,7 @@ const imageHeight = imageWidth * 9 / 16
 <View
         style={{
           marginTop: 8,
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: "rgba(0,0,0,0.3)",
           paddingHorizontal: 12,
           paddingVertical: 6,
           borderRadius: 20,

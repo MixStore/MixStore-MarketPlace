@@ -35,86 +35,6 @@ export default function AddPostScreen () {
     useEffect(() => {
       getCategoryList();
     }, [])
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const userInfoResponse = await axios.get(
-          'https://www.googleapis.com/oauth2/v3/userinfo',
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          }
-        );
-
-        setToken(tokenResponse.access_token);
-
-        userInfo = userInfoResponse.data
-        console.log('User Info:', userInfo);
-
-
-      } catch (error) {
-        console.error('Erro ao buscar informações do usuário:', error);
-      }
-    },
-    onError: (errorResponse) => console.log('Erro no login:', errorResponse),
-  });
-
-  const uploadImageToDrive = async (accessToken, value) => {
-  
-    const imagem = await fetch(image);
-    const binario = await imagem.blob();
-  
-    const metadata = {
-      name: nomeImagem ,
-      parents: ["11MVzH8BVFezzZs-GlozGp0xyWX6jRQs9"]
-    };
-  
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    form.append('file', binario);
-  
-      console.log("teste axes token: " + accessToken)
-    const uploadResponse = await axios.post(
-      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-      form, 
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const result = uploadResponse.data;
-
-
-    await axios.post(
-      `https://www.googleapis.com/drive/v3/files/${result.id}/permissions`,
-      {
-        role: 'reader',
-        type: 'anyone',
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    
-     
-      const publicUrl = `https://drive.google.com/uc?id=${result.id}`;
-
-
-      console.log('Upload feito:', result);
-
-
-      await salvarNoFirestore(value, result.id, publicUrl);
-
-    
-  };
-
  
   const pickImageAsync = async () => {
     if (Platform.OS === 'web') {
@@ -224,8 +144,8 @@ export default function AddPostScreen () {
                 });
 
                 if (!result.canceled && result.assets?.length > 0) {
-                  setImage(result.assets[0]?.uri);
-                  setNomeImagem(result.assets[0]?.fileName)
+                  setImageQrCode (result.assets[0]?.uri);
+                  setNomeQrCodeImage(result.assets[0]?.fileName)
                 } else {
                   Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
                 }
@@ -286,21 +206,13 @@ export default function AddPostScreen () {
             return
 
           }
-          
-        
-          
 
-         
-
-        
           if (base64Comprimida) {
             await salvarNoFirestore(value, base64Comprimida, null);
           } else {
             console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
           }
-        }
-        
-      
+        }      
       else {
         const imagem = await FileSystem.readAsStringAsync(image, {
           encoding: FileSystem.EncodingType.Base64,
@@ -314,21 +226,11 @@ export default function AddPostScreen () {
             encoding: FileSystem.EncodingType.Base64,
           });
           const base64ComprimidaQrCode = await comprimirImagem(`data:image/jpeg;base64,${imagemQrCode}`);
-          await salvarNoFirestore(value, base64Comprimida);
-
-
+          await salvarNoFirestore(value, base64Comprimida, base64ComprimidaQrCode);
           return
         }
-      
 
-        
-        
         if (base64Comprimida) {
-        // if (!token) {
-          // googleLogin(); // Isso vai disparar o login e depois você pode continuar
-          // return; // Aguarde o login antes de continuar
-        // }
-          // await uploadImageToDrive(token, value)
           await salvarNoFirestore(value, base64Comprimida);
         } else {
           console.warn('Não foi possível comprimir a imagem para o tamanho desejado.');
