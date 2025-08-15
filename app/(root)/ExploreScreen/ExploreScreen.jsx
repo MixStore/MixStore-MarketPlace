@@ -17,15 +17,14 @@ export default function ExploreScreen () {
   const [searchText, setSearchText] = useState('');
   const filteredProducts = productList.filter((product) =>
     product.title?.toLowerCase().includes(searchText.toLowerCase()) 
-    // || product.desc?.toLowerCase().includes(searchText.toLowerCase())
+    // || 
+    // product.desc?.toLowerCase().includes(searchText.toLowerCase())
   );
   
-
-
-  // useEffect(()=>{
-  //   setProductlist([])
-  //   getAllProducts()
-  // },[])
+  useEffect(()=>{
+    setProductlist([])
+    getAllProducts()
+  },[])
 
   useFocusEffect(
   useCallback(() => {

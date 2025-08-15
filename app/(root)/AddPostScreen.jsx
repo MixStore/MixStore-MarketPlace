@@ -2,39 +2,31 @@ import { ScrollView, Text, View, StyleSheet, TextInput, TouchableOpacity, Image,
 import { COLORS } from '../util/COLORS';
 import { app } from '../../firebaseConfig';
 import { Formik } from 'formik';
-import { getFirestore } from "firebase/firestore"
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore"
 import { collection, getDocs} from "firebase/firestore";
-import { useState, useEffect, useRef  } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect  } from 'react';
 import {Picker} from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import "../../global.css"
 import { Platform } from 'react-native';
 import { addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import axios from "axios"
-import {useGoogleLogin} from '@react-oauth/google'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
-import * as Asset from 'expo-asset';
 
 export default function AddPostScreen () {
-  const [token, setToken] = useState(null)
-  const [nomeImagem, setNomeImagem] = useState(null)
   const [image, setImage] = useState(null)
   const [imageQrCode, setImageQrCode] = useState(null)
-  const [nomeQrCodeImage, setNomeQrCodeImage] = useState(null)
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
   const formikRef = useRef();
-
-
-  // const [value, setValue] = useState(null)
   const user=getAuth().currentUser
-    useEffect(() => {
-      getCategoryList();
-    }, [])
+  const bd = getFirestore(app)
+  const [userInfo, setUserInfo] = useState({ createdAt: null, email: "", fullName: "", phone: "", photoURL: "", uid: "", defaultPix: "", defaultQrCode: "", updatedAt: new Date()})
+
+  
  
   const pickImageAsync = async () => {
     if (Platform.OS === 'web') {
@@ -47,7 +39,6 @@ export default function AddPostScreen () {
 
       if (!result.canceled && result.assets?.length > 0) {
         setImage(result.assets[0]?.uri);
-        setNomeImagem(result.assets[0]?.fileName)
       } else {
         Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
       }
@@ -69,7 +60,6 @@ export default function AddPostScreen () {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   setImage(result.assets[0]?.uri);
-                  setNomeImagem(result.assets[0]?.fileName)
                 } else {
                   Alert.alert('Nenhuma foto', 'Você não tirou nenhuma foto.');
                 }
@@ -91,7 +81,6 @@ export default function AddPostScreen () {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   setImage(result.assets[0]?.uri);
-                  setNomeImagem(result.assets[0]?.fileName)
                 } else {
                   Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
                 }
@@ -122,7 +111,6 @@ export default function AddPostScreen () {
 
       if (!result.canceled && result.assets?.length > 0) {
         setImageQrCode(result.assets[0]?.uri);
-        setNomeQrCodeImage(result.assets[0]?.fileName)
       } else {
         Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
       }
@@ -145,7 +133,6 @@ export default function AddPostScreen () {
 
                 if (!result.canceled && result.assets?.length > 0) {
                   setImageQrCode (result.assets[0]?.uri);
-                  setNomeQrCodeImage(result.assets[0]?.fileName)
                 } else {
                   Alert.alert('Nenhuma imagem', 'Você não selecionou nenhuma imagem.');
                 }
@@ -270,26 +257,14 @@ export default function AddPostScreen () {
     return imagemComprimida;
   };
 
-  const carregarImagem = async () => {
-    const response = await fetch('/pixQrCodePadrao.png');
-    const blob = await response.blob();
-    const mimeType = blob.type; // Ex: "image/png"
-  
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result.split(',')[1];
-        resolve({ base64, mimeType });
-      };
-      reader.readAsDataURL(blob);
-    });
-  };
+
+
   
   const salvarNoFirestore = async (value, base64Comprimida, base64QrCodeComprimida) => {
 
-    const { base64: base64QrCodePadrao, mimeType } = await carregarImagem();
+    const base64QrCodePadrao = userInfo.defaultQrCode;
 
-    const codigoPixPadrao = '00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E';
+    const codigoPixPadrao = userInfo.defaultPix;
 
 
     const postData = {
@@ -301,8 +276,9 @@ export default function AddPostScreen () {
       imageBase64: base64Comprimida,
       codigoCobrancaPix: value.codigoCobrancaPix || codigoPixPadrao,
       imageBase64QrCodePix: base64QrCodeComprimida || base64QrCodePadrao ,
-      useremail: user.email,
-      userImage: user.photoURL,
+      userEmail: user.email,
+      userName: user.displayName,
+      userImage: userInfo.photoURL,
       createdAt: new Date(),
     };
     console.log("Dados do post:", postData);
@@ -310,7 +286,14 @@ export default function AddPostScreen () {
 
   
     try{
-      await addDoc(collection(db, "UserPost"), postData);
+      
+    const docRef = await addDoc(collection(db, "UserPost"), postData);
+      await setDoc(doc(db, "UserPost", docRef.id), {
+        ...postData,
+        id: docRef.id,
+      });
+  
+
       setLoading(false)  
       alert("Post enviado com sucesso!");
         
@@ -340,6 +323,41 @@ export default function AddPostScreen () {
     });
   }
 
+  const getUserInfo = async () => {
+    if (!user?.uid) return;
+  
+      try {
+    
+        const userDocRef = doc(bd, 'users', user?.uid);
+        const snapshot = await getDoc(userDocRef);
+    
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setUserInfo(prev => ({
+            ...prev,
+            ...data,
+          }));
+          console.log("sefasdfasdfasdasdf ", data.defaultPix)
+
+        } else {
+          console.warn('Documento do usuário não encontrado.');
+        }
+      } catch (error) {
+        console.error("Erro ao buscar user:", error);
+      } finally {
+      }
+    };
+
+    useLayoutEffect(()=>{
+    }, [])
+
+  // const [value, setValue] = useState(null)
+    useEffect(() => {
+      getCategoryList();
+      getUserInfo();
+
+    }, [])
+
     return (
       <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
       <ScrollView showsVerticalScrollIndicator={false} className='p-10' style={styles.container}>
@@ -348,7 +366,7 @@ export default function AddPostScreen () {
          <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
         <Formik
-        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', useremail:'', userImage:'', createAt:Date.now(), 
+        initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', userEmail:'', userImage:'', createAt:Date.now(), 
           codigoCobrancaPix: '',
           imageBase64QrCode: ''
            }}
@@ -414,9 +432,9 @@ export default function AddPostScreen () {
               
               <TextInput
                 style={styles.textInput}
-                placeholder='00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E'
+                placeholder={userInfo.defaultPix}
                 placeholderTextColor='rgba(0, 0, 0, 0.4)'
-                defaultValue='00020126580014br.gov.bcb.pix01367db9522c-f113-44bc-9451-d3472a6f98ff5204000053039865802BR5923ABA BEATRIZ F DOS ANJOS6002SP62070503***6304090E'
+                defaultValue={userInfo.defaultPix}
                 value={values?.codigoCobrancaPix}
                 onChangeText={handleChange('codigoCobrancaPix')}
               />

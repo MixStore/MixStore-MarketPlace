@@ -55,7 +55,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
     useEffect(()=>{
 
         console.log("teste parametros",params)
-        console.log("teste imagem URL", params.product.imageUrl)
+        console.log("teste imagem URL", params.product.userImage)
         
         if(productLink !== null){
             setProduct(productLink)
@@ -147,7 +147,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
         try {
             const db = getFirestore(app);
             const userPostRef = collection(db, 'UserPost');
-            const q = query(userPostRef, where('useremail', '==', user?.email), where('title', '==', product.title));
+            const q = query(userPostRef, where('userEmail', '==', user?.email), where('title', '==', product.title));
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 const docRef = snapshot.docs[0].ref;
@@ -319,19 +319,19 @@ export default function ProductDetailComponent({params, navigation, productLink=
                 {product.category}
                 </Text>
             </View>
-
+           
 
             <View style={styles.userContainer} className="p-3  flex flex-row items-center gap-3 border-[1px] border-gray-400">
-                <Image source={{uri:product?.userImage}} 
-                className="w-12 h=12 rounded-full"
+            <Image source={{uri: product.userImage}} 
+                className="w-16 h-16 rounded-full border"
                 />
                 <View>
-                    <Text className="font-bold text-[18px]"> {product.userName} </Text>
-                    <Text className="text-gray-500">{product.useremail}</Text>
+                    <Text className="font-bold text-[18px] mt-1"> {product.userName} </Text>
+                    <Text className="text-gray-500 m-1">{product.userEmail}</Text>
                 </View>
             </View>
 
-                {user?.email===product.useremail 
+                {user?.email===product.userEmail 
                 ? 
             <TouchableOpacity
             onPress={()=>deleteUserPost()}

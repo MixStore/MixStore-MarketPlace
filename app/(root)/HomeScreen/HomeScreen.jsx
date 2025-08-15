@@ -5,11 +5,21 @@ import { app } from '../../../firebaseConfig';
 import Slider from '../../../components/HomeScreen/Slider';
 import Categories from '../../../components/HomeScreen/Categories';
 import LatestItemList from '../../../components/HomeScreen/LatestItemList';
-import { collection, getDocs, getFirestore, orderBy, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import "../../../global.css"
 import { useNavigation } from 'expo-router';
 import TopBarNavigationComponent from '../../../components/TopBarNavigatiomComponent';
+import { getAuth } from 'firebase/auth';
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  orderBy,
+  doc,
+  where
+} from 'firebase/firestore';
+
 
 
 
@@ -36,7 +46,6 @@ export default function HomeScreen() {
   
     return unsubscribe; // Limpa o listener ao desmontar
   }, [navigation]);
-  
 
   const getCategoryList=async ()=>{
       setLoading(true)
@@ -75,23 +84,45 @@ export default function HomeScreen() {
     setLoading(false)
   }
   }
+  
+  const getLatestItemList = async () => {
+    setLoading(true);
+    setLatestItemList([]);
 
-  const getLatestItemList=async()=>{
-  setLoading(true)
-  setLatestItemList([])
-  try{
-    const querySnapshot=await getDocs(collection(db, 'UserPost'), orderBy('createdAt', 'desc' ))
-    querySnapshot.forEach((doc)=>{
-      console.log("Docs", doc.data())
-      setLatestItemList(latestItemList => [...latestItemList, doc.data()])
-    })
-  }catch (e){
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
 
-  } finally{
-    setLoading(false)
-  }
+      const db = getFirestore(app);
 
-  }
+      const historicoRef = collection(db, 'historico', currentUser.uid, 'produtos');
+      const historicoQuery = query(historicoRef, orderBy('visualizadoEm', 'desc'));
+      const historicoSnapshot = await getDocs(historicoQuery);
+
+      const produtoIds = historicoSnapshot.docs.map(doc => doc.id);
+
+      const userPostRef = collection(db, 'UserPost');
+      const userPostSnapshot = await getDocs(userPostRef);
+
+      const produtosFiltrados = userPostSnapshot.docs
+        .filter(doc => produtoIds.includes(doc.id))
+        .map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const produtosOrdenados = produtoIds
+        .map(id => produtosFiltrados.find(p => p.id === id))
+        .filter(Boolean); 
+
+      setLatestItemList(produtosOrdenados);
+    } catch (e) {
+      console.error('Erro ao buscar histórico de produtos:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  
 
     return (
         <ScrollView showsVerticalScrollIndicator={false} style={styles.container} className='py-8 px-6 flex-1' >
@@ -105,7 +136,7 @@ export default function HomeScreen() {
         {/* <TopBarNavigationComponent /> */}
           <Slider sliderList={sliderList} />
           <Categories categoryList={categoryList} />
-          <LatestItemList latestItemList={latestItemList} heading={"Últimos itens"} />
+          <LatestItemList latestItemList={latestItemList} heading={"Histórico de visualizações"} />
         </>
       }
         </ScrollView>

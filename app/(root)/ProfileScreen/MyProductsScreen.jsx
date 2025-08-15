@@ -37,7 +37,7 @@ const getUserPosts = async () => {
     setLoading(true)
     const q = query(
       collection(bd, 'UserPost'),
-      where('useremail', '==', user?.email)
+      where('userEmail', '==', user?.email)
     )
     const snapshot = await getDocs(q)
 
