@@ -16,7 +16,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function AddNewPostComponent ({params, navigation}) {
+export default function AddDetailPostCOmponent ({params, navigation}) {
   const [image, setImage] = useState(null)
   const [imageQrCode, setImageQrCode] = useState(null)
   const [loading, setLoading] = useState(false);
@@ -257,9 +257,6 @@ export default function AddNewPostComponent ({params, navigation}) {
   
     return imagemComprimida;
   };
-
-
-
   
   const salvarNoFirestore = async (value, base64Comprimida, base64QrCodeComprimida) => {
 
@@ -360,13 +357,13 @@ export default function AddNewPostComponent ({params, navigation}) {
     }, [])
 
     return (
-      <GoogleOAuthProvider clientId="557231134276-0hqhotgpndav0cqv5jiltnd9g1pgs6qj.apps.googleusercontent.com">
       <ScrollView showsVerticalScrollIndicator={false} className='p-10' style={styles.container}>
       <KeyboardAvoidingView>
       <ScrollView >
-         <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
+        <Text className='text-[27px] font-bold'> Adicionar novo Post </Text>
         <Text className='text-[16px] text-gray-500 mb-7'> Criar novo post e começar a vender</Text>
-        <Formik
+        
+        {/* <Formik
         initialValues={{title: '', desc:'', category:'', address:'', price:'', image:'', userName:'', userEmail:'', userImage:'', createAt:Date.now(), 
           codigoCobrancaPix: '',
           imageBase64QrCode: ''
@@ -470,11 +467,12 @@ export default function AddNewPostComponent ({params, navigation}) {
                 </TouchableOpacity>
             </View>
           )}
-        </Formik>
+        </Formik> */}
+
+
       </ScrollView>
       </KeyboardAvoidingView>
       </ScrollView>
-      </GoogleOAuthProvider>
     )
 }
 

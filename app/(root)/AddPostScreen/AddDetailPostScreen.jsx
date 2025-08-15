@@ -1,11 +1,11 @@
 import { ScrollView, StyleSheet } from 'react-native'
-import "../../global.css"
+import ".././../../global.css"
 import { useNavigation } from 'expo-router';
-import AddNewPostComponent from '../../components/AddNewPostComponent';
 import { useRoute } from '@react-navigation/native';
-import { COLORS } from '../util/COLORS';
+import { COLORS } from '../../util/COLORS';
+import AddDetailPostCOmponent from '../../../components/AddDetailPostComponent';
 
-export default function AddPostScreen () {
+export default function AddDetailPostScreen () {
   const {params}=useRoute()
   const navigation =  useNavigation();
 
@@ -13,7 +13,7 @@ export default function AddPostScreen () {
     return (
       <ScrollView showsHorizontalScrollIndicator={false} style={styles.container} >
 
-      <AddNewPostComponent params={params} navigation={navigation} /> 
+          <AddDetailPostCOmponent params={params} navigation={navigation} /> 
     
       </ScrollView>
     )
