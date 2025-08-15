@@ -1,12 +1,13 @@
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, FlatList } from "react-native";
 import "../../global.css";
 import { useEffect } from "react";
 import PostItem from "./PostItem";
 
-export default function LatestItemList({ latestItemList, heading }) {
+export default function LatestItemList({ latestItemList, heading, isComprado }) {
   useEffect(() => {
     latestItemList.forEach((item, index) => {
-      console.log(`Imageeeem ${index}:`, item.imagUrl?.substring(0, 100) + '...');
+      console.log(`Imageeeem ${index}:`, item.imageBase64?.substring(0, 100) + '...');
+      console.log(`tituloooo ${index}:`, item.title);
     });
   }, [latestItemList]);
 
@@ -19,7 +20,7 @@ export default function LatestItemList({ latestItemList, heading }) {
         numColumns={2}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <PostItem item={item}/>
+          <PostItem item={item} isComprado={isComprado} />
         )}
       />
     </View>

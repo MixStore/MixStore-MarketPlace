@@ -1,6 +1,6 @@
 
 import { Modal, Clipboard, ToastAndroid, Dimensions } from 'react-native';
-import { query, where, deleteDoc } from "firebase/firestore";
+import { query, where, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { View, Text, Image, ScrollView,StyleSheet, TouchableOpacity, Linking, Share, Alert } from "react-native";
 import { Platform } from "react-native";
@@ -18,8 +18,6 @@ import FlashMessage, { showMessage } from 'react-native-flash-message'
 
 
 export default function ProductDetailComponent({params, navigation, productLink=null}){
-    const [token, setToken] = useState(null)
-
     const[product, setProduct]=useState([])
     const user = getAuth().currentUser
     const db = getFirestore(app);
@@ -39,6 +37,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
         Clipboard.setString(product.codigoCobrancaPix);
         setCopied(true);
         setShowConfirmation(true);
+        salvarHistoricoCompra();
         showToast("Código copiado!", "success");
     };
     
@@ -51,6 +50,37 @@ export default function ProductDetailComponent({params, navigation, productLink=
     })
   }
 
+  const salvarHistoricoCompra = async () =>{
+    
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      const db = getFirestore(app);
+
+      if (!currentUser || !product?.id) {
+        console.warn("Usuário ou produto inválido.");
+        return;
+      }
+
+      const produtoRef = collection(db, 'historicoCompras', currentUser.uid, 'produtos');
+
+      const newprodutoRef = doc(produtoRef, product.id); 
+
+      const saveProduct = {
+        ...product,
+        produtoRecebido: false,
+        compradoEm: new Date(),
+      };
+      
+
+      await setDoc(newprodutoRef, saveProduct);
+
+      console.log("Produto salvo em minhasCompras com sucesso.");
+    } catch (error) {
+      console.error("Erro ao salvar em minhasCompras:", error);
+    }
+
+  }
 
     useEffect(()=>{
 
@@ -164,46 +194,6 @@ export default function ProductDetailComponent({params, navigation, productLink=
         }
     }; 
 
-    const googleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-          try {
-            const userInfoResponse = await axios.get(
-              'https://www.googleapis.com/oauth2/v3/userinfo',
-              {
-                headers: {
-                  Authorization: `Bearer ${tokenResponse.access_token}`,
-                },
-              }
-            );
-    
-            setToken(tokenResponse.access_token);
-    
-            // userInfo = userInfoResponse.data
-            // console.log('User Info:', userInfo);
-    
-    
-          } catch (error) {
-            console.error('Erro ao buscar informações do usuário:', error);
-          }
-        },
-        onError: (errorResponse) => console.log('Erro no login:', errorResponse),
-    });
-
-    const deleteImageFromDrive = async (fileId) => {
-            try {
-                await axios.delete(
-                    `https://www.googleapis.com/drive/v3/files/${fileId}`,
-                    {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    }
-                );
-                console.log("Imagem deletada do Drive com sucesso.");
-                } catch (error) {
-                console.error("Erro ao deletar imagem do Drive:", error);
-                }
-    };
   
 
     return(
@@ -278,7 +268,7 @@ export default function ProductDetailComponent({params, navigation, productLink=
                       </TouchableOpacity>
                     </>
                   )}
-                  <TouchableOpacity onPress={() => setShowPixModal(false)} style={{ marginTop: 15 }}>
+                  <TouchableOpacity onPress={() => {setShowPixModal(false); setShowConfirmation(false) }} style={{ marginTop: 15 }}>
                     <Text style={{ color: 'gray' }}>Fechar</Text>
                   </TouchableOpacity>
                 </ScrollView>

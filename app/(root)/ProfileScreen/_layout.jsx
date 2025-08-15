@@ -49,6 +49,18 @@ export default function ProfileStackLayout(){
           
         }}
       />
+
+      <Stack.Screen
+        name="MinhasComprasScreen"
+        options={{
+          headerStyle: {
+            backgroundColor: COLORS.primary,
+          },
+          headerTintColor: COLORS.white,
+          headerTitle: "Minhas Compras",
+          
+        }}
+      />
     </Stack>
 
 
